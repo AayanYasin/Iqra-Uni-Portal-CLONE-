@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* General Reset */
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
+        body { background-color: #f4f6f9; color: #333; overflow-x: hidden; width: 100%; }
+
+        /* --- TOP NAVBAR --- */
+        .top-navbar { background-color: #0b3d68; color: white; display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; height: 55px; position: sticky; top: 0; z-index: 100; width: 100%; }
+        .nav-left { display: flex; align-items: center; gap: 15px; font-size: 20px; }
+        .nav-left i { cursor: pointer; }
+        .nav-right { display: flex; align-items: center; gap: 15px; }
+        .notification { position: relative; font-size: 20px; }
+        .badge { position: absolute; top: -5px; right: -8px; background-color: #e74c3c; color: white; font-size: 10px; border-radius: 50%; padding: 2px 5px; }
+        
+        .profile-pic { width: 35px; height: 35px; background-color: #ccc; border-radius: 50%; border: 2px solid white; overflow: hidden; cursor: pointer; user-select: none; -webkit-user-select: none; flex-shrink: 0;}
+        .profile-pic img { width: 100%; height: 100%; object-fit: cover; pointer-events: none;}
+
+        /* --- SIDEBAR OVERLAY & STYLES --- */
+        .sidebar-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 999; opacity: 0; visibility: hidden; transition: opacity 0.3s; }
+        .sidebar-overlay.active { opacity: 1; visibility: visible; }
+
+        .sidebar { position: fixed; top: 0; left: -320px; width: 280px; max-width: 80vw; height: 100%; background-color: #0b3d68; z-index: 1000; transition: left 0.3s ease; display: flex; flex-direction: column; box-shadow: 2px 0 5px rgba(0,0,0,0.2); }
+        .sidebar.active { left: 0; }
+        .sidebar-header { padding: 40px 20px 20px 20px; display: flex; flex-direction: column; align-items: center; color: white; }
+        .sidebar-profile-pic { width: 80px; height: 80px; border-radius: 50%; border: 2px solid white; overflow: hidden; margin-bottom: 10px; }
+        .sidebar-profile-pic img { width: 100%; height: 100%; object-fit: cover; }
+        .sidebar-name { font-size: 16px; font-weight: bold; text-align: center; }
+        
+        .sidebar-menu-container { background-color: white; flex-grow: 1; border-top-left-radius: 15px; border-top-right-radius: 15px; padding-top: 15px; padding-bottom: 20px; overflow-y: auto; }
+        .menu-item { display: flex; align-items: center; padding: 14px 20px; color: #1a2a40; text-decoration: none; font-size: 15px; }
+        .menu-item:hover { background-color: #f5f5f5; }
+        .menu-item i.icon { width: 35px; font-size: 18px; color: #122b46; }
+        .menu-item .text { flex-grow: 1; }
+        .menu-item i.arrow { font-size: 12px; color: #666; }
+        .menu-item.active { color: #902b2b; }
+        .menu-item.active i.icon { color: #902b2b; }
+
+        /* --- BREADCRUMB --- */
+        .breadcrumb { background-color: white; padding: 12px 15px; display: flex; align-items: center; gap: 10px; color: #0b3d68; font-size: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); width: 100%; flex-wrap: wrap;}
+        .breadcrumb i.fa-home { font-size: 16px; }
+        .breadcrumb i.fa-chevron-right { font-size: 12px; color: #666; }
+
+        /* --- MAIN CONTAINER & DASHBOARD SPECIFICS --- */
+        .container { padding: 15px; max-width: 600px; margin: 0 auto; width: 100%; background: white; min-height: 100vh;}
+        
+        .section-header { border-bottom: 1px solid #ccc; padding-bottom: 8px; margin-bottom: 20px; margin-top: 15px; font-size: 18px; color: #122b46; }
+
+        /* Academic Section Styles */
+        .academic-profile { text-align: center; margin-bottom: 30px; }
+        .academic-profile .dash-profile-pic { width: 90px; height: 90px; border-radius: 50%; object-fit: cover; margin-bottom: 10px; }
+        .academic-profile h2 { font-size: 16px; color: #111; margin-bottom: 2px; }
+        .academic-profile .student-id { font-size: 13px; color: #666; margin-bottom: 2px; }
+        .academic-profile .faculty { font-size: 14px; color: #666; margin-bottom: 8px; }
+        .promoted-tag { display: inline-block; background-color: #009688; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        
+        .academic-stats { text-align: center; font-size: 13px; color: #333; line-height: 1.6; margin-top: 20px; }
+        .academic-stats p { margin-bottom: 3px; }
+        
+        .today-classes { text-align: center; font-size: 12px; color: #333; margin-top: 25px; line-height: 1.6;}
+        .today-classes strong { font-size: 13px; display: block; margin-bottom: 5px; }
+
+        /* Course Cards Styles */
+        .course-card { border: 1px solid #e0e0e0; border-radius: 4px; overflow: hidden; margin-bottom: 15px; }
+        .course-card-header { background-color: #122b46; color: white; padding: 10px 15px; font-size: 12px; text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px;}
+        .course-card-body { background-color: #fafafa; padding: 12px 15px; font-size: 12px; line-height: 1.8; color: #333; }
+        .course-card-body .instructor { color: #0b3d68; text-decoration: underline; font-size: 13px; margin-bottom: 5px; display: block; }
+        .course-card-body .credits { text-decoration: underline; }
+
+        /* News Card */
+        .news-card { background: white; border-radius: 4px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); overflow: hidden; margin-bottom: 20px;}
+        .news-header-img { background-color: #122b46; color: white; padding: 15px; font-size: 24px; font-weight: bold; letter-spacing: 2px; font-family: serif;}
+        .news-body { padding: 20px 15px; }
+        .news-title { font-size: 14px; color: #122b46; margin-bottom: 5px; text-transform: uppercase;}
+        .news-date { font-size: 12px; color: #888; }
+
+        /* --- MODAL STYLES --- */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; justify-content: center; align-items: center; padding: 15px; }
+        .modal-content { background: white; padding: 20px; border-radius: 8px; width: 100%; max-width: 400px; max-height: 90vh; overflow-y: auto; }
+        .modal-content h2 { margin-bottom: 15px; color: #0b3d68; font-size: 18px; text-align: center; }
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display: block; margin-bottom: 4px; font-size: 13px; color: #333; font-weight: bold; }
+        .form-group input { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; }
+        .modal-buttons { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+        .btn { padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; font-weight: bold; }
+        .btn-cancel { background: #e0e0e0; color: #333; }
+        .btn-save { background: #0b3d68; color: white; }
+
+    </style>
+</head>
+<body>
+
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-profile-pic">
+                <img src="https://res.cloudinary.com/dftplaxsk/image/upload/v1776757086/1757164224340_2_ra0orp.jpg" alt="Profile">
+            </div>
+            <div class="sidebar-name">Aayan Yasin</div>
+        </div>
+        <div class="sidebar-menu-container">
+            <a href="index.html" class="menu-item active"><i class="fa-solid fa-border-all icon"></i><span class="text">Dashboard</span></a>
+            <a href="#" class="menu-item"><i class="fa-solid fa-user icon"></i><span class="text">Profile</span></a>
+            <a href="attendance.html" class="menu-item"><i class="fa-solid fa-file-signature icon"></i><span class="text">Attendance</span></a>
+            <a href="404.html?page=Results" class="menu-item"><i class="fa-solid fa-chart-simple icon"></i><span class="text">Results & Exams</span><i class="fa-solid fa-chevron-down arrow"></i></a>
+            <a href="404.html?page=Exam-Datesheet" class="menu-item"><i class="fa-solid fa-chart-column icon"></i><span class="text">Exam Datesheet</span></a>
+            <a href="404.html?page=Notifications" class="menu-item"><i class="fa-solid fa-bell icon"></i><span class="text">Notifications</span></a>
+            <a href="404.html?page=Enrollments" class="menu-item"><i class="fa-solid fa-briefcase icon"></i><span class="text">Enrollments</span><i class="fa-solid fa-chevron-down arrow"></i></a>
+            <a href="404.html?page=Feedback" class="menu-item"><i class="fa-solid fa-message icon"></i><span class="text">Feedback</span><i class="fa-solid fa-chevron-down arrow"></i></a>
+            <a href="404.html?page=Requests" class="menu-item"><i class="fa-solid fa-bars-staggered icon"></i><span class="text">Requests</span><i class="fa-solid fa-chevron-down arrow"></i></a>
+            <a href="schedule.html" class="menu-item"><i class="fa-regular fa-calendar-days icon"></i><span class="text">Time Table</span></a>
+            <a href="404.html?page=Invoices" class="menu-item"><i class="fa-solid fa-file-invoice-dollar icon"></i><span class="text">Invoices</span></a>
+            <a href="404.html?page=MsThesis" class="menu-item"><i class="fa-solid fa-briefcase icon"></i><span class="text">MS Thesis</span></a>
+            <a href="404.html?page=Complaints" class="menu-item"><i class="fa-solid fa-door-open icon"></i><span class="text">Complaints</span></a>
+        </div>
+    </div>
+
+    <div class="top-navbar">
+        <div class="nav-left">
+            <i class="fa-solid fa-bars" id="menuBtn"></i>
+            <i class="fa-solid fa-grip"></i>
+        </div>
+        <div class="nav-right">
+            <div class="notification">
+                <i class="fa-regular fa-bell"></i>
+                <span class="badge">3</span>
+            </div>
+            <div class="profile-pic" id="topProfilePic">
+                <img src="https://res.cloudinary.com/dftplaxsk/image/upload/v1776757086/1757164224340_2_ra0orp.jpg" alt="Profile">
+            </div>
+        </div>
+    </div>
+
+    <div class="breadcrumb">
+        <i class="fa-solid fa-house"></i>
+        <i class="fa-solid fa-chevron-right"></i>
+        <span>Dashboard</span>
+    </div>
+
+    <div class="container">
+        
+        <h2 class="section-header">Academics</h2>
+        
+        <div class="academic-profile">
+            <img src="https://res.cloudinary.com/dftplaxsk/image/upload/v1776757086/1757164224340_2_ra0orp.jpg" class="dash-profile-pic" alt="Profile">
+            <h2>Aayan Yasin</h2>
+            <div class="student-id">IU04-0225-0926</div>
+            <div class="faculty">Faculty of Engineering, Science and Technology</div>
+            <div class="promoted-tag">Promoted</div>
+            
+            <div class="academic-stats">
+                <p>Academic Standings:</p>
+                <p id="displayCgpa">CGPA: 0.00</p>
+                <br>
+                <p id="displayEarned">Earned Cr : 0.0</p>
+                <p id="displayTotal">Total Cr : 0.0</p>
+                <p id="displayProgress">Inprogress Cr : 0.0</p>
+            </div>
+
+            <div class="today-classes">
+                <strong>Today Classes:</strong>
+                <div id="todayClassesContainer">Loading today's classes...</div>
+            </div>
+        </div>
+
+        <h2 class="section-header">Classes, Grades and Attendance</h2>
+        
+        <div id="coursesContainer">
+            <p style="text-align:center; padding: 20px; font-size:13px;">Loading your courses...</p>
+        </div>
+
+        <h2 class="section-header">News and Announcements</h2>
+        
+        <div class="news-card">
+            <div class="news-header-img">
+                IQRA <span style="border: 2px solid white; padding: 0 4px; border-radius:2px;">IU</span><br>
+                <span style="font-size: 10px; letter-spacing: 1px; font-family: sans-serif; opacity: 0.8;">UNIVERSITY</span>
+            </div>
+            <div class="news-body">
+                <div class="news-title">HOW TO ATTEND ONLINE CLASSES</div>
+                <div class="news-date">2026-03-06 11:07:26</div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="modal" id="adminModal">
+        <div class="modal-content">
+            <h2>Edit Dashboard Metrics</h2>
+            
+            <div class="form-group">
+                <label>Current CGPA</label>
+                <input type="text" id="inputCgpa" placeholder="e.g. 3.59">
+            </div>
+            <div class="form-group">
+                <label>Earned Credits</label>
+                <input type="text" id="inputEarned" placeholder="e.g. 18.0">
+            </div>
+            <div class="form-group">
+                <label>Total Credits</label>
+                <input type="text" id="inputTotal" placeholder="e.g. 0.0">
+            </div>
+            <div class="form-group">
+                <label>Inprogress Credits</label>
+                <input type="text" id="inputProgress" placeholder="e.g. 15.0">
+            </div>
+            <hr style="margin: 15px 0; border: none; border-top: 1px solid #eee;">
+            <div class="form-group">
+                <label>Global Academic Term</label>
+                <input type="text" id="inputTerm" placeholder="e.g. IU04.SPRING-26">
+            </div>
+
+            <div class="modal-buttons">
+                <button class="btn btn-cancel" onclick="closeAdminModal()">Cancel</button>
+                <button class="btn btn-save" id="saveSettingsBtn">Save Settings</button>
+            </div>
+        </div>
+    </div>
+
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getFirestore, collection, getDocs, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        // Your Exact Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyA3-GjLe-n574aqPVrk8kfE2PGK06_JN88",
+            authDomain: "iqrauni-clone-aayan.firebaseapp.com",
+            projectId: "iqrauni-clone-aayan",
+            storageBucket: "iqrauni-clone-aayan.firebasestorage.app",
+            messagingSenderId: "49713197339",
+            appId: "1:49713197339:web:c4aefdddff2191161623be",
+            measurementId: "G-9XBBRXGD41"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Variables for Global State
+        let globalSettings = { cgpa: "0.00", earned: "0.0", total: "0.0", progress: "0.0", term: "Not Set" };
+        let scheduleData = [];
+        let attendanceData = [];
+
+        // Determine Today's Name
+        const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+        const todayString = daysOfWeek[new Date().getDay()];
+
+        // 1. Fetch Global Settings
+        async function fetchGlobalSettings() {
+            try {
+                const docSnap = await getDoc(doc(db, "settings", "global"));
+                if (docSnap.exists() && docSnap.data()) {
+                    const data = docSnap.data();
+                    globalSettings.term = data.currentTerm || "Not Set";
+                    globalSettings.cgpa = data.cgpa || "0.00";
+                    globalSettings.earned = data.earned || "0.0";
+                    globalSettings.total = data.total || "0.0";
+                    globalSettings.progress = data.progress || "0.0";
+
+                    // Update UI text immediately
+                    document.getElementById('displayCgpa').innerText = `CGPA: ${globalSettings.cgpa}`;
+                    document.getElementById('displayEarned').innerText = `Earned Cr : ${globalSettings.earned}`;
+                    document.getElementById('displayTotal').innerText = `Total Cr : ${globalSettings.total}`;
+                    document.getElementById('displayProgress').innerText = `Inprogress Cr : ${globalSettings.progress}`;
+                }
+            } catch(e) {
+                console.error("Error fetching settings: ", e);
+            }
+        }
+
+        // 2. Fetch Data & Build Dashboard
+        async function fetchDashboardData() {
+            await fetchGlobalSettings(); // Ensure settings load first
+
+            try {
+                // Fetch Schedule Data
+                const scheduleSnap = await getDocs(collection(db, "schedule"));
+                scheduleData = [];
+                scheduleSnap.forEach(doc => scheduleData.push(doc.data()));
+
+                // Fetch Attendance Data to get percentages
+                const coursesSnap = await getDocs(collection(db, "courses"));
+                attendanceData = [];
+                coursesSnap.forEach(doc => attendanceData.push({ id: doc.id, ...doc.data() }));
+
+                renderTodayClasses();
+                renderCourseCards();
+
+            } catch (error) {
+                console.error("Error loading dashboard data: ", error);
+            }
+        }
+
+        function renderTodayClasses() {
+            const container = document.getElementById('todayClassesContainer');
+            // Filter schedule for today
+            const todaysClasses = scheduleData.filter(cls => cls.day === todayString);
+            
+            if (todaysClasses.length === 0) {
+                container.innerHTML = "<em>No classes scheduled for today. Relax!</em>";
+                return;
+            }
+
+            // Sort by start time
+            todaysClasses.sort((a, b) => a.startTime.localeCompare(b.startTime));
+
+            let html = "";
+            todaysClasses.forEach(cls => {
+                html += `<div>${cls.courseName} : ${cls.startTime} Hrs. - ${cls.endTime} Hrs.</div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        function renderCourseCards() {
+            const container = document.getElementById('coursesContainer');
+            
+            // Get unique courses from the schedule
+            let uniqueCourses = [];
+            let seenNames = new Set();
+            
+            scheduleData.forEach(cls => {
+                if(!seenNames.has(cls.courseName)) {
+                    seenNames.add(cls.courseName);
+                    uniqueCourses.push(cls);
+                }
+            });
+
+            if(uniqueCourses.length === 0) {
+                container.innerHTML = "<p style='text-align:center;'>No courses found in schedule.</p>";
+                return;
+            }
+
+            let html = "";
+            uniqueCourses.forEach(cls => {
+                
+                // Cross-reference attendance percentage from 'courses' collection
+                let attendanceText = "N/A%";
+                const matchedCourse = attendanceData.find(c => c.courseName === cls.courseName);
+                
+                if (matchedCourse && matchedCourse.attendanceRecords) {
+                    const records = matchedCourse.attendanceRecords;
+                    const total = records.length;
+                    const attended = records.filter(r => r.status === "Present").length;
+                    if(total > 0) {
+                        attendanceText = ((attended / total) * 100).toFixed(1) + "%";
+                    } else {
+                        attendanceText = "0%";
+                    }
+                }
+
+                html += `
+                <div class="course-card">
+                    <div class="course-card-header">${cls.courseName}</div>
+                    <div class="course-card-body">
+                        <span class="instructor">${cls.instructor}</span>
+                        <span style="text-decoration: underline;">${cls.courseCode}</span> 
+                        <span class="credits">Credits : 3.0</span> <span style="text-decoration: underline;">Active Class</span><br>
+                        <span style="text-decoration: underline;">Attendance: ${attendanceText}</span> 
+                        <span style="text-decoration: underline;">${globalSettings.term}</span>
+                    </div>
+                </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        fetchDashboardData();
+
+        // 3. Save Admin Settings
+        document.getElementById('saveSettingsBtn').addEventListener('click', async () => {
+            const newSettings = {
+                cgpa: document.getElementById('inputCgpa').value || "0.00",
+                earned: document.getElementById('inputEarned').value || "0.0",
+                total: document.getElementById('inputTotal').value || "0.0",
+                progress: document.getElementById('inputProgress').value || "0.0",
+                currentTerm: document.getElementById('inputTerm').value || globalSettings.term
+            };
+
+            try {
+                await setDoc(doc(db, "settings", "global"), newSettings, { merge: true });
+                alert("Dashboard updated successfully!");
+                closeAdminModal();
+                fetchDashboardData(); // Refresh everything
+            } catch(e) {
+                console.error("Error saving settings: ", e);
+                alert("Failed to update.");
+            }
+        });
+
+        // 4. Modal Setup
+        window.openAdminModal = function() {
+            // Pre-fill inputs with current state
+            document.getElementById('inputCgpa').value = globalSettings.cgpa;
+            document.getElementById('inputEarned').value = globalSettings.earned;
+            document.getElementById('inputTotal').value = globalSettings.total;
+            document.getElementById('inputProgress').value = globalSettings.progress;
+            document.getElementById('inputTerm').value = globalSettings.term;
+
+            document.getElementById('adminModal').style.display = 'flex';
+        }
+
+        window.closeAdminModal = function() {
+            document.getElementById('adminModal').style.display = 'none';
+        }
+    </script>
+
+    <script>
+        const menuBtn = document.getElementById('menuBtn');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+
+        function toggleSidebar() {
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+
+        menuBtn.addEventListener('click', toggleSidebar);
+        overlay.addEventListener('click', toggleSidebar);
+
+        // Long Press Logic for Admin Modal
+        const profilePic = document.getElementById('topProfilePic');
+        let pressTimer;
+
+        function startPress(e) {
+            e.preventDefault();
+            pressTimer = window.setTimeout(() => {
+                openAdminModal();
+            }, 800); // 800ms hold
+        }
+        function cancelPress() { clearTimeout(pressTimer); }
+
+        profilePic.addEventListener('mousedown', startPress);
+        profilePic.addEventListener('mouseup', cancelPress);
+        profilePic.addEventListener('mouseleave', cancelPress);
+        profilePic.addEventListener('touchstart', startPress);
+        profilePic.addEventListener('touchend', cancelPress);
+        profilePic.addEventListener('touchcancel', cancelPress);
+    </script>
+</body>
+</html>

@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance Classes</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* General Reset and Body Styles */
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
+        body { background-color: #f0f0f0; color: #333; overflow-x: hidden; width: 100%;}
+
+        /* Top Navigation Bar */
+        .top-navbar { background-color: #0b3d68; color: white; display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; height: 55px; position: sticky; top: 0; z-index: 100;}
+        .nav-left { display: flex; align-items: center; gap: 15px; font-size: 20px; }
+        .nav-left i { cursor: pointer; }
+        .nav-right { display: flex; align-items: center; gap: 15px; }
+        .notification { position: relative; font-size: 20px; }
+        .badge { position: absolute; top: -5px; right: -8px; background-color: #e74c3c; color: white; font-size: 10px; border-radius: 50%; padding: 2px 5px; }
+        
+        .profile-pic { width: 35px; height: 35px; background-color: #ccc; border-radius: 50%; border: 2px solid white; overflow: hidden; cursor: pointer; user-select: none; -webkit-user-select: none; flex-shrink: 0;}
+        .profile-pic img { width: 100%; height: 100%; object-fit: cover; pointer-events: none;}
+
+        /* Sidebar Overlay & Styles */
+        .sidebar-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 999; opacity: 0; visibility: hidden; transition: opacity 0.3s; }
+        .sidebar-overlay.active { opacity: 1; visibility: visible; }
+        .sidebar { position: fixed; top: 0; left: -320px; width: 280px; max-width: 80vw; height: 100%; background-color: #0b3d68; z-index: 1000; transition: left 0.3s ease; display: flex; flex-direction: column; box-shadow: 2px 0 5px rgba(0,0,0,0.2); }
+        .sidebar.active { left: 0; }
+        .sidebar-header { padding: 40px 20px 20px 20px; display: flex; flex-direction: column; align-items: center; color: white; }
+        .sidebar-profile-pic { width: 80px; height: 80px; border-radius: 50%; border: 2px solid white; overflow: hidden; margin-bottom: 10px; }
+        .sidebar-profile-pic img { width: 100%; height: 100%; object-fit: cover; }
+        .sidebar-name { font-size: 16px; font-weight: bold; text-align: center; }
+        
+        .sidebar-menu-container { background-color: white; flex-grow: 1; border-top-left-radius: 15px; border-top-right-radius: 15px; padding-top: 15px; padding-bottom: 20px; overflow-y: auto; }
+        .menu-item { display: flex; align-items: center; padding: 14px 20px; color: #1a2a40; text-decoration: none; font-size: 15px; }
+        .menu-item:hover { background-color: #f5f5f5; }
+        .menu-item i.icon { width: 35px; font-size: 18px; color: #122b46; }
+        .menu-item .text { flex-grow: 1; }
+        .menu-item i.arrow { font-size: 12px; color: #666; }
+        .menu-item.active { color: #902b2b; }
+        .menu-item.active i.icon { color: #902b2b; }
+
+        /* Breadcrumb Section */
+        .breadcrumb { background-color: white; padding: 12px 15px; display: flex; align-items: center; gap: 10px; color: #0b3d68; font-size: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); width: 100%; flex-wrap: wrap;}
+        .breadcrumb i.fa-home { font-size: 16px; }
+        .breadcrumb i.fa-chevron-right { font-size: 12px; color: #666; }
+
+        /* Main Content */
+        .container { padding: 15px; max-width: 600px; margin: 0 auto; width: 100%; }
+        .page-title { color: #1a2a40; font-size: 22px; font-weight: normal; margin-bottom: 15px; margin-top: 5px; }
+        .card { background-color: white; padding: 20px 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-radius: 6px; width: 100%; overflow: hidden;}
+        
+        .tabs { border-bottom: 1px solid #e0e0e0; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;}
+        .tab { display: inline-block; padding: 10px 0; color: #637381; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .tab.active { color: #637381; border-bottom: 2px solid #0b3d68; }
+        .semester-date-label { font-size: 11px; color: #888; font-weight: bold; }
+
+        /* Accordion List */
+        .accordion-item { margin-bottom: 15px; border: 1px solid #eee; border-radius: 4px; overflow: hidden; }
+        
+        /* FIX: Prevent flexbox from pushing items off screen */
+        .accordion-header { background-color: #f0f2f5; padding: 15px; cursor: pointer; display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+        
+        /* FIX: Force long words to break */
+        .course-name { color: #122b46; font-size: 14px; line-height: 1.4; font-weight: bold; flex: 1; min-width: 0; word-break: break-word; overflow-wrap: break-word;}
+        
+        .attendance-container { display: flex; flex-direction: column; align-items: flex-start; min-width: 100px; flex-shrink: 0; }
+        .attendance-label { color: #122b46; font-size: 14px; display: flex; align-items: center; justify-content: space-between; width: 100%; margin-bottom: 2px; }
+        .attendance-label i { font-size: 14px; color: #666; transition: transform 0.3s ease; }
+        .attendance-value { color: #122b46; font-size: 14px; margin-bottom: 6px; font-weight: bold;}
+        
+        /* Progress Bar */
+        .progress-bar-bg { width: 100%; height: 6px; background-color: #e5e7eb; border-radius: 4px; overflow: hidden; }
+        .progress-bar-fill { height: 100%; background-color: #7ab84f; border-radius: 4px; transition: width 0.5s ease;}
+
+        /* Expanded Details Area */
+        .accordion-body { display: none; padding: 15px 0; border-top: 1px solid #f0f2f5; background: white;}
+        .accordion-item.expanded .accordion-body { display: block; }
+        .accordion-item.expanded .accordion-header { background-color: #e8eaee; }
+        .accordion-item.expanded .attendance-label i { transform: rotate(180deg); }
+
+        /* Inner Content & Tables */
+        .inner-tabs { border-bottom: 1px solid #e0e0e0; margin: 0 15px 15px 15px; }
+        .inner-tab { display: inline-block; padding: 5px 0; font-size: 11px; color: #637381; text-transform: uppercase; border-bottom: 2px solid #d1d5db; }
+        .course-details { padding: 0 15px; font-size: 11px; color: #333; line-height: 1.8; margin-bottom: 15px; word-break: break-word;}
+        .course-details strong { color: #1a2a40; }
+        
+        /* FIX: Make table scrollable horizontally if needed */
+        .table-container { padding: 0 15px; width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 250px; }
+        th, td { padding: 10px 5px; text-align: left; border-bottom: 1px solid #eee; }
+        th { background-color: #122b46; color: white; font-weight: normal; white-space: nowrap;}
+        td { color: #1a2a40; font-weight: bold; }
+        .status-present { color: #2e7d32; }
+        .status-absent { color: #c62828; }
+
+        /* Modal Styles */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; justify-content: center; align-items: center; padding: 15px;}
+        .modal-content { background: white; padding: 20px; border-radius: 8px; width: 100%; max-width: 400px; max-height: 90vh; overflow-y: auto;}
+        .modal-content h2 { margin-bottom: 15px; color: #0b3d68; font-size: 18px; text-align: center;}
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-size: 13px; color: #333; font-weight: bold;}
+        .form-group select, .form-group input { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px;}
+        .modal-buttons { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+        .btn { padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; font-weight: bold;}
+        .btn-cancel { background: #e0e0e0; color: #333; }
+        .btn-save { background: #0b3d68; color: white; }
+        
+        /* Action Menu Modals Utility */
+        .w-100 { width: 100%; }
+        .mb-10 { margin-bottom: 10px; }
+
+    </style>
+</head>
+<body>
+
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-profile-pic">
+                <img src="https://res.cloudinary.com/dftplaxsk/image/upload/v1776757086/1757164224340_2_ra0orp.jpg" alt="Profile">
+            </div>
+            <div class="sidebar-name">Aayan Yasin</div>
+        </div>
+        <div class="sidebar-menu-container">
+            <a href="index.html" class="menu-item"><i class="fa-solid fa-border-all icon"></i><span class="text">Dashboard</span></a>
+            <a href="#" class="menu-item"><i class="fa-solid fa-user icon"></i><span class="text">Profile</span></a>
+            <a href="attendance.html" class="menu-item active"><i class="fa-solid fa-file-signature icon"></i><span class="text">Attendance</span></a>
+            <a href="404.html?page=Results" class="menu-item"><i class="fa-solid fa-chart-simple icon"></i><span class="text">Results & Exams</span><i class="fa-solid fa-chevron-down arrow"></i></a>
+            <a href="404.html?page=Exam-Datesheet" class="menu-item"><i class="fa-solid fa-chart-column icon"></i><span class="text">Exam Datesheet</span></a>
+            <a href="404.html?page=Notifications" class="menu-item"><i class="fa-solid fa-bell icon"></i><span class="text">Notifications</span></a>
+            <a href="404.html?page=Enrollments" class="menu-item"><i class="fa-solid fa-briefcase icon"></i><span class="text">Enrollments</span><i class="fa-solid fa-chevron-down arrow"></i></a>
+            <a href="404.html?page=Feedback" class="menu-item"><i class="fa-solid fa-message icon"></i><span class="text">Feedback</span><i class="fa-solid fa-chevron-down arrow"></i></a>
+            <a href="404.html?page=Requests" class="menu-item"><i class="fa-solid fa-bars-staggered icon"></i><span class="text">Requests</span><i class="fa-solid fa-chevron-down arrow"></i></a>
+            <a href="schedule.html" class="menu-item"><i class="fa-regular fa-calendar-days icon"></i><span class="text">Time Table</span></a>
+            <a href="404.html?page=Invoices" class="menu-item"><i class="fa-solid fa-file-invoice-dollar icon"></i><span class="text">Invoices</span></a>
+            <a href="404.html?page=MsThesis" class="menu-item"><i class="fa-solid fa-briefcase icon"></i><span class="text">MS Thesis</span></a>
+            <a href="404.html?page=Complaints" class="menu-item"><i class="fa-solid fa-door-open icon"></i><span class="text">Complaints</span></a>
+        </div>
+    </div>
+
+    <div class="top-navbar">
+        <div class="nav-left">
+            <i class="fa-solid fa-bars" id="menuBtn"></i>
+            <i class="fa-solid fa-grip"></i>
+        </div>
+        <div class="nav-right">
+            <div class="notification">
+                <i class="fa-regular fa-bell"></i>
+                <span class="badge">3</span>
+            </div>
+            <div class="profile-pic" id="topProfilePic">
+                <img src="https://res.cloudinary.com/dftplaxsk/image/upload/v1776757086/1757164224340_2_ra0orp.jpg" alt="Profile">
+            </div>
+        </div>
+    </div>
+
+    <div class="breadcrumb">
+        <i class="fa-solid fa-house"></i>
+        <i class="fa-solid fa-chevron-right"></i>
+        <span>Attendance Classes</span>
+    </div>
+
+    <div class="container">
+        <h1 class="page-title">Attendance</h1>
+        <div class="card">
+            <div class="tabs">
+                <div class="tab active">ACTIVE CLASSES</div>
+                <div class="semester-date-label" id="displaySemStart">Start: Loading...</div>
+            </div>
+
+            <div class="accordion" id="accordionContainer">
+                <p style="text-align:center; padding: 20px;">Syncing historical data & loading...</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="actionMenuModal">
+        <div class="modal-content">
+            <h2>Admin Options</h2>
+            <button class="btn btn-save w-100 mb-10" onclick="openFormModal()">Manual Add/Edit Record</button>
+            <button class="btn btn-save w-100 mb-10" style="background-color: #2c3e50;" onclick="openSettingsModal()">Edit Global Settings</button>
+            <button class="btn btn-cancel w-100" onclick="closeAllModals()">Cancel</button>
+        </div>
+    </div>
+
+    <div class="modal" id="settingsModal">
+        <div class="modal-content">
+            <h2>Global Settings</h2>
+            <div class="form-group">
+                <label>Semester Start Date</label>
+                <input type="date" id="semesterStartInput" required>
+            </div>
+            <div class="modal-buttons">
+                <button class="btn btn-cancel" onclick="closeAllModals()">Cancel</button>
+                <button class="btn btn-save" id="saveSettingsBtn">Save Settings</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="adminModal">
+        <div class="modal-content">
+            <h2>Manual Add/Update Attendance</h2>
+            <div class="form-group">
+                <label>Select Course</label>
+                <select id="courseSelect"></select>
+            </div>
+            <div class="form-group">
+                <label>Class Date</label>
+                <input type="date" id="attendanceDate" required>
+            </div>
+            <div class="form-group">
+                <label>Status</label>
+                <select id="attendanceStatus">
+                    <option value="Present">Present</option>
+                    <option value="Absent">Absent</option>
+                    <option value="Leave">Leave</option>
+                </select>
+            </div>
+            <div class="modal-buttons">
+                <button class="btn btn-cancel" onclick="closeAllModals()">Cancel</button>
+                <button class="btn btn-save" id="saveBtn">Save Record</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getFirestore, collection, getDocs, doc, getDoc, updateDoc, addDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyA3-GjLe-n574aqPVrk8kfE2PGK06_JN88",
+            authDomain: "iqrauni-clone-aayan.firebaseapp.com",
+            projectId: "iqrauni-clone-aayan",
+            storageBucket: "iqrauni-clone-aayan.firebasestorage.app",
+            messagingSenderId: "49713197339",
+            appId: "1:49713197339:web:c4aefdddff2191161623be",
+            measurementId: "G-9XBBRXGD41"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        let globalTerm = "Current Term";
+        let globalSemesterStart = "";
+
+        window.toggleAccordion = function(element) {
+            element.classList.toggle('expanded');
+        }
+
+        function formatDate(dateObj) {
+            return dateObj.getFullYear() + "-" + String(dateObj.getMonth() + 1).padStart(2, '0') + "-" + String(dateObj.getDate()).padStart(2, '0');
+        }
+
+        // 1. Fetch Settings
+        async function fetchSettings() {
+            try {
+                const docSnap = await getDoc(doc(db, "settings", "global"));
+                if (docSnap.exists() && docSnap.data()) {
+                    globalTerm = docSnap.data().currentTerm || globalTerm;
+                    globalSemesterStart = docSnap.data().semesterStartDate || "";
+                    
+                    if(globalSemesterStart) {
+                        document.getElementById('displaySemStart').innerText = `Start: ${globalSemesterStart}`;
+                    } else {
+                        document.getElementById('displaySemStart').innerText = `Start: Not Set`;
+                    }
+                }
+            } catch(e) { console.error("Settings fetch error:", e); }
+        }
+
+        // 2. Auto-Sync Historical Attendance
+        async function syncAttendanceHistory() {
+            let today = new Date();
+            today.setHours(0,0,0,0);
+            
+            let startDate = new Date();
+            
+            if (globalSemesterStart) {
+                const [yyyy, mm, dd] = globalSemesterStart.split('-');
+                startDate = new Date(yyyy, mm - 1, dd);
+                startDate.setHours(0,0,0,0);
+            } else {
+                startDate.setHours(0,0,0,0); 
+            }
+
+            if (startDate > today) return; 
+
+            try {
+                const schedSnap = await getDocs(collection(db, "schedule"));
+                let scheduleData = [];
+                schedSnap.forEach(d => scheduleData.push(d.data()));
+
+                const courseSnap = await getDocs(collection(db, "courses"));
+                let coursesData = [];
+                courseSnap.forEach(d => coursesData.push({id: d.id, ...d.data()}));
+
+                const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+                let updatesNeeded = {}; 
+
+                for (let d = new Date(startDate); d <= today; d.setDate(d.getDate() + 1)) {
+                    let dayName = days[d.getDay()];
+                    let dateString = formatDate(d);
+
+                    let daySchedule = scheduleData.filter(s => s.day === dayName);
+
+                    for (let sched of daySchedule) {
+                        let courseIndex = coursesData.findIndex(c => c.courseName === sched.courseName);
+                        
+                        if (courseIndex >= 0) {
+                            let course = coursesData[courseIndex];
+                            let records = course.attendanceRecords || [];
+                            
+                            if (!records.find(r => r.date === dateString)) {
+                                records.push({ date: dateString, status: "Present" });
+                                coursesData[courseIndex].attendanceRecords = records;
+                                updatesNeeded[course.id] = records; 
+                            }
+                        } else {
+                            let newCourse = {
+                                courseName: sched.courseName,
+                                courseCode: sched.courseCode || "",
+                                term: globalTerm,
+                                attendanceRecords: [{ date: dateString, status: "Present" }]
+                            };
+                            try {
+                                const docRef = await addDoc(collection(db, "courses"), newCourse);
+                                coursesData.push({id: docRef.id, ...newCourse}); 
+                            } catch(e) {}
+                        }
+                    }
+                }
+
+                for (let id in updatesNeeded) {
+                    await updateDoc(doc(db, "courses", id), { attendanceRecords: updatesNeeded[id] });
+                }
+
+            } catch(e) { console.error("Historical auto-sync error:", e); }
+        }
+
+        // 3. Main Render Function
+        async function fetchAndRenderAttendance() {
+            await fetchSettings();
+            await syncAttendanceHistory(); 
+
+            const container = document.getElementById('accordionContainer');
+            const selectDropdown = document.getElementById('courseSelect');
+            
+            try {
+                const querySnapshot = await getDocs(collection(db, "courses"));
+                let html = "";
+                selectDropdown.innerHTML = ""; 
+                
+                querySnapshot.forEach((docSnap) => {
+                    const data = docSnap.data();
+                    const docId = docSnap.id;
+                    
+                    let option = document.createElement('option');
+                    option.value = docId;
+                    option.text = data.courseName;
+                    selectDropdown.appendChild(option);
+
+                    const records = data.attendanceRecords || [];
+                    const classesConducted = records.length;
+                    const classesAttended = records.filter(r => r.status === "Present").length;
+                    
+                    let percentage = 0;
+                    if(classesConducted > 0) {
+                        percentage = ((classesAttended / classesConducted) * 100).toFixed(1);
+                    }
+
+                    let tableRows = '';
+                    if (records.length > 0) {
+                        records.sort((a, b) => new Date(a.date) - new Date(b.date));
+                        records.forEach((record, index) => {
+                            let statusClass = record.status === 'Present' ? 'status-present' : 'status-absent';
+                            tableRows += `
+                                <tr>
+                                    <td>${index + 1}</td>
+                                    <td>${record.date}</td>
+                                    <td class="${statusClass}">${record.status}</td>
+                                    <td>-</td>
+                                </tr>
+                            `;
+                        });
+                    } else {
+                        tableRows = `<tr><td colspan="4" style="text-align:center; padding: 15px;">No attendance recorded yet.</td></tr>`;
+                    }
+
+                    html += `
+                    <div class="accordion-item" onclick="toggleAccordion(this)">
+                        <div class="accordion-header">
+                            <div class="course-name">${data.courseName.replace(" ", "<br>")}</div>
+                            <div class="attendance-container">
+                                <div class="attendance-label">Attendance: <i class="fa-solid fa-chevron-down"></i></div>
+                                <div class="attendance-value">${percentage}%</div>
+                                <div class="progress-bar-bg">
+                                    <div class="progress-bar-fill" style="width: ${percentage}%;"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-body">
+                            <div class="inner-tabs">
+                                <div class="inner-tab active">LECTURES</div>
+                            </div>
+                            <div class="course-details">
+                                <p><strong>Course :</strong> ${data.courseName}</p>
+                                <p><strong>Course Code :</strong> ${data.courseCode || 'N/A'}</p><br>
+                                <p><strong>Number of classes Conducted :</strong> ${classesConducted}</p><br>
+                                <p><strong>Number of classes Attended :</strong> ${classesAttended}</p><br>
+                                <p><strong>Academic Term :</strong> ${data.term || globalTerm}</p><br>
+                                <p><strong>Attendance Percentage:</strong> ${percentage}</p>
+                            </div>
+                            <div class="table-container">
+                                <table>
+                                    <thead>
+                                        <tr><th>Sr. no</th><th>Date</th><th>Status</th><th>Fine</th></tr>
+                                    </thead>
+                                    <tbody>
+                                        ${tableRows}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>`;
+                });
+
+                if(html === "") html = "<p style='padding:15px'>No courses found in database.</p>";
+                container.innerHTML = html;
+
+                document.getElementById('attendanceDate').valueAsDate = new Date();
+
+            } catch (error) {
+                console.error("Render error: ", error);
+                container.innerHTML = `<p style='color:red; padding:15px;'>Error connecting to Firebase.</p>`;
+            }
+        }
+
+        fetchAndRenderAttendance();
+
+        // 4. Modal Interactions
+        window.closeAllModals = function() {
+            document.getElementById('actionMenuModal').style.display = 'none';
+            document.getElementById('settingsModal').style.display = 'none';
+            document.getElementById('adminModal').style.display = 'none';
+        }
+
+        window.openSettingsModal = function() {
+            closeAllModals();
+            document.getElementById('semesterStartInput').value = globalSemesterStart;
+            document.getElementById('settingsModal').style.display = 'flex';
+        }
+
+        window.openFormModal = function() {
+            closeAllModals();
+            document.getElementById('adminModal').style.display = 'flex';
+        }
+
+        // 5. Save Global Settings
+        document.getElementById('saveSettingsBtn').addEventListener('click', async () => {
+            const newDate = document.getElementById('semesterStartInput').value;
+            if(!newDate) return alert("Please select a date.");
+
+            try {
+                await setDoc(doc(db, "settings", "global"), { semesterStartDate: newDate }, { merge: true });
+                alert("Semester start date saved! Syncing history now...");
+                closeAllModals();
+                
+                document.getElementById('accordionContainer').innerHTML = `<p style="text-align:center; padding: 20px;">Syncing historical data... Please wait.</p>`;
+                fetchAndRenderAttendance(); 
+            } catch(e) {
+                alert("Failed to save.");
+                console.error(e);
+            }
+        });
+
+        // 6. Manual Save/Update
+        document.getElementById('saveBtn').addEventListener('click', async () => {
+            const selectedId = document.getElementById('courseSelect').value;
+            const dateInput = document.getElementById('attendanceDate').value;
+            const statusInput = document.getElementById('attendanceStatus').value;
+
+            if(!dateInput) { alert("Please select a date."); return; }
+
+            try {
+                const docRef = doc(db, "courses", selectedId);
+                const docSnap = await getDoc(docRef);
+                
+                if (docSnap.exists()) {
+                    let records = docSnap.data().attendanceRecords || [];
+                    const existingIndex = records.findIndex(r => r.date === dateInput);
+                    
+                    if (existingIndex >= 0) {
+                        records[existingIndex].status = statusInput; 
+                    } else {
+                        records.push({ date: dateInput, status: statusInput });
+                    }
+
+                    await updateDoc(docRef, { attendanceRecords: records });
+                    
+                    alert("Attendance saved manually!");
+                    closeAllModals();
+                    fetchAndRenderAttendance(); 
+                }
+            } catch (error) {
+                console.error("Update error: ", error);
+                alert("Failed to save record.");
+            }
+        });
+
+    </script>
+
+    <script>
+        const menuBtn = document.getElementById('menuBtn');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+
+        function toggleSidebar() {
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+        menuBtn.addEventListener('click', toggleSidebar);
+        overlay.addEventListener('click', toggleSidebar);
+
+        const profilePic = document.getElementById('topProfilePic');
+        let pressTimer;
+
+        function startPress(e) {
+            e.preventDefault();
+            pressTimer = window.setTimeout(() => {
+                document.getElementById('actionMenuModal').style.display = 'flex';
+            }, 800);
+        }
+        function cancelPress() { clearTimeout(pressTimer); }
+
+        profilePic.addEventListener('mousedown', startPress);
+        profilePic.addEventListener('mouseup', cancelPress);
+        profilePic.addEventListener('mouseleave', cancelPress);
+        profilePic.addEventListener('touchstart', startPress);
+        profilePic.addEventListener('touchend', cancelPress);
+        profilePic.addEventListener('touchcancel', cancelPress);
+    </script>
+</body>
+</html>
