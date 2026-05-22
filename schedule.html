@@ -395,6 +395,8 @@
                 console.error("Error fetching schedule: ", error);
                 wrapper.innerHTML = `<p style='color:red; padding:15px;'>Error connecting to Firebase.</p>`;
             }
+        }
+        
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 fetchGlobalSettings();
