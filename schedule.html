@@ -302,6 +302,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         // Added setDoc and getDoc for handling the global Term setting
         import { getFirestore, collection, getDocs, addDoc, doc, updateDoc, deleteDoc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
         // Your specific Firebase configuration
         const firebaseConfig = {
@@ -316,6 +317,7 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        const auth = getAuth(app);
 
         // UI State Variables
         let globalClassesData = [];
@@ -344,7 +346,7 @@
                 document.getElementById('currentTermLabel').innerText = `Term : Error`;
             }
         }
-        fetchGlobalSettings();
+        // Fetch is now wrapped in auth state listener
 
         // 2. Fetch Schedule
         async function fetchSchedule() {
@@ -393,8 +395,14 @@
                 console.error("Error fetching schedule: ", error);
                 wrapper.innerHTML = `<p style='color:red; padding:15px;'>Error connecting to Firebase.</p>`;
             }
-        }
-        fetchSchedule();
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                fetchGlobalSettings();
+                fetchSchedule();
+            } else {
+                window.location.href = "login.html";
+            }
+        });
 
         // 3. Modal Controls 
         window.closeAllModals = function() {

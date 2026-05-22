@@ -219,10 +219,26 @@
         </div>
     </div>
 
-    <script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyA3-GjLe-n574aqPVrk8kfE2PGK06_JN88",
+            authDomain: "iqrauni-clone-aayan.firebaseapp.com",
+            projectId: "iqrauni-clone-aayan",
+            storageBucket: "iqrauni-clone-aayan.firebasestorage.app",
+            messagingSenderId: "49713197339",
+            appId: "1:49713197339:web:c4aefdddff2191161623be",
+            measurementId: "G-9XBBRXGD41"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
         const validEmail = "iu04-0225-0926@iqra.edu.pk";
 
-        function validateEmail() {
+        window.validateEmail = function() {
             const email = document.getElementById('emailInput').value.trim();
             const errorElement = document.getElementById('emailError');
             
@@ -233,29 +249,36 @@
                 document.getElementById('step2').style.display = 'block';
                 document.getElementById('passwordInput').focus();
             } else {
+                errorElement.innerText = "That Microsoft account doesn't exist. Enter a different account";
                 errorElement.style.display = 'block';
             }
         }
 
-        function showStep1() {
+        window.showStep1 = function() {
             document.getElementById('step2').style.display = 'none';
             document.getElementById('step1').style.display = 'block';
             document.getElementById('emailInput').focus();
         }
 
-        function login() {
-            // For now, any password works.
-            sessionStorage.setItem("isLoggedIn", "true");
-            window.location.href = "index.html";
+        window.login = async function() {
+            const email = document.getElementById('displayEmail').innerText;
+            const password = document.getElementById('passwordInput').value;
+
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                window.location.href = "index.html";
+            } catch (error) {
+                console.error("Login failed: ", error);
+                alert("Incorrect password or login failed.");
+            }
         }
         
-        // Allow pressing Enter to submit
         document.getElementById('emailInput').addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') validateEmail();
+            if (e.key === 'Enter') window.validateEmail();
         });
         
         document.getElementById('passwordInput').addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') login();
+            if (e.key === 'Enter') window.login();
         });
     </script>
 </body>

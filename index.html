@@ -227,6 +227,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getFirestore, collection, getDocs, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
         // Your Exact Configuration
         const firebaseConfig = {
@@ -241,6 +242,7 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        const auth = getAuth(app);
 
         // Variables for Global State
         let globalSettings = { cgpa: "0.00", earned: "0.0", total: "0.0", progress: "0.0", term: "Not Set" };
@@ -371,7 +373,13 @@
             container.innerHTML = html;
         }
 
-        fetchDashboardData();
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                fetchDashboardData();
+            } else {
+                window.location.href = "login.html";
+            }
+        });
 
         // 3. Save Admin Settings
         document.getElementById('saveSettingsBtn').addEventListener('click', async () => {
