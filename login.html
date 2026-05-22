@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Iqra Portal</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #b3d9f2; /* Light blue background matching the image */
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: Arial, sans-serif;
+            color: #333;
+        }
+
+        .login-container {
+            width: 100%;
+            max-width: 350px;
+            padding: 20px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 20px;
+            background-color: rgba(255, 255, 255, 0.4);
+            font-size: 14px;
+            box-sizing: border-box;
+            outline: none;
+        }
+
+        .input-group input::placeholder {
+            color: #777;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            background-color: rgba(255, 255, 255, 0.4);
+            border: 1px solid #2b4b73;
+            border-radius: 8px;
+            font-size: 16px;
+            color: #2b4b73;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            box-sizing: border-box;
+            transition: background-color 0.2s;
+        }
+
+        .btn:hover {
+            background-color: rgba(255, 255, 255, 0.6);
+        }
+
+        .btn-odoo .icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: #d15c89;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .btn-odoo .icon::after {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background-color: white;
+            border-radius: 50%;
+        }
+        
+        .btn-microsoft .icon {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 1px;
+            width: 18px;
+            height: 18px;
+        }
+        
+        .btn-microsoft .icon div:nth-child(1) { background-color: #F25022; }
+        .btn-microsoft .icon div:nth-child(2) { background-color: #7FBA00; }
+        .btn-microsoft .icon div:nth-child(3) { background-color: #00A4EF; }
+        .btn-microsoft .icon div:nth-child(4) { background-color: #FFB900; }
+
+        .divider {
+            text-align: center;
+            margin: 15px 0;
+            color: #2b4b73;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-container">
+        <div class="input-group">
+            <label>Username</label>
+            <input type="text" placeholder="Enter Username">
+        </div>
+        <div class="input-group">
+            <label>Password</label>
+            <input type="password" placeholder="Enter Password">
+        </div>
+
+        <button class="btn btn-odoo" onclick="alert('Please use Microsoft Login')">
+            <span class="icon"></span>
+            Login With Odoo
+        </button>
+
+        <div class="divider">Or</div>
+
+        <button class="btn btn-microsoft" onclick="window.location.href='microsoft-login.html'">
+            <div class="icon">
+                <div></div><div></div>
+                <div></div><div></div>
+            </div>
+            login With Microsoft
+        </button>
+    </div>
+
+</body>
+</html>
