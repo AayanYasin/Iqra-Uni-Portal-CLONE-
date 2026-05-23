@@ -224,7 +224,7 @@
             <a href="attendance.html" class="menu-item"><i class="fa-solid fa-file-signature icon"></i><span class="text">Attendance</span></a>
             <a href="results.html" class="menu-item"><i class="fa-solid fa-chart-simple icon"></i><span class="text">Results & Exams</span><i class="fa-solid fa-chevron-down arrow"></i></a>
             <a href="datesheet.html" class="menu-item"><i class="fa-solid fa-chart-column icon"></i><span class="text">Exam Datesheet</span></a>
-            <a href="404.html?page=Notifications" class="menu-item"><i class="fa-solid fa-bell icon"></i><span class="text">Notifications</span></a>
+            <a href="notifications.html" class="menu-item"><i class="fa-solid fa-bell icon"></i><span class="text">Notifications</span></a>
             <a href="404.html?page=Enrollments" class="menu-item"><i class="fa-solid fa-briefcase icon"></i><span class="text">Enrollments</span></a>
             <div>
                 <div class="menu-item" onclick="const sub = document.getElementById('feedbackSub'); const arrow = this.querySelector('.arrow'); if(sub.style.display === 'block') { sub.style.display = 'none'; arrow.style.transform = 'rotate(0deg)'; } else { sub.style.display = 'block'; arrow.style.transform = 'rotate(180deg)'; }" style="cursor: pointer; display: flex; align-items: center;">
@@ -249,9 +249,8 @@
             <i class="fa-solid fa-grip"></i>
         </div>
         <div class="nav-right">
-            <div class="notification">
+            <div class="notification" onclick="window.location.href='notifications.html'">
                 <i class="fa-regular fa-bell"></i>
-                <span class="badge">3</span>
             </div>
             <div class="profile-container">
                 <div class="profile-pic" id="topProfilePic">
