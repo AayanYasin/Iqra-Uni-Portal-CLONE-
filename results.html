@@ -285,17 +285,19 @@
             
             <!-- Result Tabs -->
             <div class="tabs">
-                <div class="tab" onclick="switchResultTab(this, 'activePanel')">Active Courses</div>
-                <div class="tab active" onclick="switchResultTab(this, 'previousPanel')">Previous Courses</div>
+                <div class="tab active" onclick="switchResultTab(this, 'activePanel')">Active Courses</div>
+                <div class="tab" onclick="switchResultTab(this, 'previousPanel')">Previous Courses</div>
             </div>
             
             <!-- Active Courses list placeholder -->
-            <div id="activePanel" style="display: none; padding: 15px 0;">
-                <p style="text-align:center; font-size:12px; color:#555; font-style:italic;">No active courses grades finalized for this term yet.</p>
+            <div id="activePanel" style="display: block; padding: 15px 0;">
+                <div id="activeCoursesContainer">
+                    <p style="text-align:center; font-size:12px; color:#555; font-style:italic;">Syncing active courses...</p>
+                </div>
             </div>
             
             <!-- Previous Courses stands display -->
-            <div id="previousPanel" style="display: block;">
+            <div id="previousPanel" style="display: none;">
                 
                 <!-- Print Transcript Button -->
                 <button class="btn-download" onclick="downloadTranscript()">
@@ -633,6 +635,110 @@
             } catch(e) { console.error("Error avatar sidebar fetch: ", e); }
         }
 
+        // 3. Fetch active courses from courses collection and render cards
+        async function fetchActiveCoursesAndRender(currentTerm) {
+            const container = document.getElementById('activeCoursesContainer');
+            try {
+                const querySnapshot = await getDocs(collection(db, "courses"));
+                let activeCourses = [];
+                
+                querySnapshot.forEach(docSnap => {
+                    const data = docSnap.data();
+                    if (data.term === currentTerm) {
+                        activeCourses.push({ id: docSnap.id, ...data });
+                    }
+                });
+
+                // Auto Seed active courses if empty for current term
+                if (activeCourses.length === 0) {
+                    const seedActive = [
+                        {
+                            courseName: "TECHNOPRENEURSHIP",
+                            courseCode: "GER46203",
+                            term: currentTerm,
+                            creditHours: "2.0",
+                            attendanceRecords: []
+                        },
+                        {
+                            courseName: "MULTIVARIABLE CALCULUS",
+                            courseCode: "MTE111",
+                            term: currentTerm,
+                            creditHours: "3.0",
+                            attendanceRecords: []
+                        }
+                    ];
+                    
+                    for (const course of seedActive) {
+                        await addDoc(collection(db, "courses"), course);
+                    }
+                    
+                    // Refetch seeded active courses
+                    const refetchSnapshot = await getDocs(collection(db, "courses"));
+                    activeCourses = [];
+                    refetchSnapshot.forEach(docSnap => {
+                        const data = docSnap.data();
+                        if (data.term === currentTerm) {
+                            activeCourses.push({ id: docSnap.id, ...data });
+                        }
+                    });
+                }
+
+                // Helper to get credit hours based on course name
+                function getCreditHours(courseName) {
+                    const upper = courseName.toUpperCase();
+                    if (upper.includes("LAB")) return "1.0";
+                    if (upper.includes("TECHNOPRENEURSHIP")) return "2.0";
+                    if (upper.includes("APPLIED PHYSICS")) return "2.0";
+                    if (upper.includes("ISLAMIC STUDIES")) return "2.0";
+                    return "3.0";
+                }
+
+                let html = "";
+                activeCourses.forEach(course => {
+                    const creditHours = course.creditHours || getCreditHours(course.courseName);
+                    const courseCode = course.courseCode || "N/A";
+                    
+                    html += `
+                        <div class="active-course-card" style="background-color: white; border: 1px solid #e2e8f0; border-radius: 4px; overflow: hidden; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); position: relative;">
+                            <div style="background-color: #122b46; color: white; padding: 15px 15px;">
+                                <div style="font-size: 13px; font-weight: bold; text-transform: uppercase; font-family: sans-serif; letter-spacing: 0.3px;">${course.courseName}</div>
+                                <div style="font-size: 11px; margin-top: 5px; font-weight: normal; color: rgba(255,255,255,0.9); font-family: sans-serif;">${courseCode}</div>
+                            </div>
+                            <div style="padding: 15px 15px 25px 15px; background-color: #ffffff; display: flex; align-items: center; justify-content: space-between; position: relative;">
+                                <div style="display: flex; align-items: center; gap: 6px;">
+                                    <span style="font-size: 12px; font-weight: bold; color: #111; font-family: sans-serif;">Credit Hours : <span style="font-weight: normal; color: #444;">${creditHours}</span></span>
+                                    <span style="background-color: #902b2b; color: white; padding: 3px 6px; border-radius: 2px; font-size: 9px; font-weight: bold; margin-left: 5px; font-family: sans-serif;">Class in progress</span>
+                                </div>
+                                <div style="background-color: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 2px; font-size: 10px; font-weight: bold; position: absolute; bottom: 8px; right: 10px; font-family: sans-serif;">
+                                    ${currentTerm}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                container.innerHTML = html;
+
+            } catch (error) {
+                console.error("Firestore active courses rendering error: ", error);
+                container.innerHTML = `<p style="text-align:center; color:red; padding:20px; font-size:12px;">Error connecting to Firestore database.</p>`;
+            }
+        }
+
+        // 4. Fetch Global Settings for current term
+        async function fetchGlobalSettingsAndActiveCourses() {
+            let currentTerm = "IU04.SPRING-26";
+            try {
+                const docSnap = await getDoc(doc(db, "settings", "global"));
+                if (docSnap.exists() && docSnap.data()) {
+                    currentTerm = docSnap.data().currentTerm || currentTerm;
+                }
+            } catch(e) {
+                console.error("Error fetching global settings for active term: ", e);
+            }
+            await fetchActiveCoursesAndRender(currentTerm);
+        }
+
         window.handleLogout = async function() {
             try {
                 await signOut(auth);
@@ -647,6 +753,7 @@
             if (user) {
                 fetchStudentAvatar();
                 fetchStandingsAndRender();
+                fetchGlobalSettingsAndActiveCourses();
             } else {
                 window.location.href = "login.html";
             }
