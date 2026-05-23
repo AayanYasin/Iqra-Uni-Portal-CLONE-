@@ -159,9 +159,17 @@
             <a href="results.html" class="menu-item"><i class="fa-solid fa-chart-simple icon"></i><span class="text">Results & Exams</span><i class="fa-solid fa-chevron-down arrow"></i></a>
             <a href="datesheet.html" class="menu-item active"><i class="fa-solid fa-chart-column icon"></i><span class="text">Exam Datesheet</span></a>
             <a href="404.html?page=Notifications" class="menu-item"><i class="fa-solid fa-bell icon"></i><span class="text">Notifications</span></a>
-            <a href="404.html?page=Enrollments" class="menu-item"><i class="fa-solid fa-briefcase icon"></i><span class="text">Enrollments</span><i class="fa-solid fa-chevron-down arrow"></i></a>
-            <a href="404.html?page=Feedback" class="menu-item"><i class="fa-solid fa-message icon"></i><span class="text">Feedback</span><i class="fa-solid fa-chevron-down arrow"></i></a>
-            <a href="404.html?page=Requests" class="menu-item"><i class="fa-solid fa-bars-staggered icon"></i><span class="text">Requests</span><i class="fa-solid fa-chevron-down arrow"></i></a>
+            <a href="404.html?page=Enrollments" class="menu-item"><i class="fa-solid fa-briefcase icon"></i><span class="text">Enrollments</span></a>
+            <div>
+                <div class="menu-item" onclick="const sub = document.getElementById('feedbackSub'); const arrow = this.querySelector('.arrow'); if(sub.style.display === 'block') { sub.style.display = 'none'; arrow.style.transform = 'rotate(0deg)'; } else { sub.style.display = 'block'; arrow.style.transform = 'rotate(180deg)'; }" style="cursor: pointer; display: flex; align-items: center;">
+                    <i class="fa-solid fa-message icon"></i>
+                    <span class="text">Feedback</span>
+                    <i class="fa-solid fa-chevron-down arrow" style="transition: transform 0.2s; font-size: 12px; color: #666; margin-left: auto;"></i>
+                </div>
+                <div id="feedbackSub" style="display: none; background-color: #f4f6f9; border-left: 3px solid #902b2b;">
+                    <a href="404.html?page=QA-Feedback" class="menu-item" style="padding-left: 40px; font-size: 14px;"><i class="fa-solid fa-comments icon" style="width: 30px; font-size: 15px; color: #122b46;"></i><span class="text">QA Feedback</span></a>
+                </div>
+            </div>
             <a href="schedule.html" class="menu-item"><i class="fa-regular fa-calendar-days icon"></i><span class="text">Time Table</span></a>
             <a href="invoices.html" class="menu-item"><i class="fa-solid fa-file-invoice-dollar icon"></i><span class="text">Invoices</span></a>
             <a href="404.html?page=MsThesis" class="menu-item"><i class="fa-solid fa-briefcase icon"></i><span class="text">MS Thesis</span></a>
