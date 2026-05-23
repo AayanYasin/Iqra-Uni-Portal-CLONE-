@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Complaints</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* General Reset and Body Styles */
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
+        body { background-color: #f0f0f0; color: #333; overflow-x: hidden; width: 100%;}
+
+        /* --- TOP NAVBAR --- */
+        .top-navbar { background-color: #0b3d68; color: white; display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; height: 55px; position: sticky; top: 0; z-index: 100;}
+        .nav-left { display: flex; align-items: center; gap: 15px; font-size: 20px; }
+        .nav-left i { cursor: pointer; }
+        .nav-right { display: flex; align-items: center; gap: 15px; }
+        .notification { position: relative; font-size: 20px; cursor: pointer; }
+        
+        .profile-pic { width: 35px; height: 35px; background-color: #ccc; border-radius: 50%; border: 2px solid white; overflow: hidden; cursor: pointer; user-select: none; -webkit-user-select: none; flex-shrink: 0;}
+        .profile-pic img { width: 100%; height: 100%; object-fit: cover; pointer-events: none;}
+
+        /* --- SIDEBAR OVERLAY & STYLES --- */
+        .sidebar-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 999; opacity: 0; visibility: hidden; transition: opacity 0.3s; }
+        .sidebar-overlay.active { opacity: 1; visibility: visible; }
+        
+        .sidebar { position: fixed; top: 0; left: -320px; width: 280px; max-width: 80vw; height: 100%; background-color: #0b3d68; z-index: 1000; transition: left 0.3s ease; display: flex; flex-direction: column; box-shadow: 2px 0 5px rgba(0,0,0,0.2); }
+        .sidebar.active { left: 0; }
+        .sidebar-header { padding: 40px 20px 20px 20px; display: flex; flex-direction: column; align-items: center; color: white; }
+        .sidebar-profile-pic { width: 80px; height: 80px; border-radius: 50%; border: 2px solid white; overflow: hidden; margin-bottom: 10px; }
+        .sidebar-profile-pic img { width: 100%; height: 100%; object-fit: cover; }
+        .sidebar-name { font-size: 16px; font-weight: bold; text-align: center; }
+        
+        .sidebar-menu-container { background-color: white; flex-grow: 1; border-top-left-radius: 15px; border-top-right-radius: 15px; padding-top: 15px; padding-bottom: 20px; overflow-y: auto; }
+        .menu-item { display: flex; align-items: center; padding: 14px 20px; color: #1a2a40; text-decoration: none; font-size: 15px; }
+        .menu-item:hover { background-color: #f5f5f5; }
+        .menu-item i.icon { width: 35px; font-size: 18px; color: #122b46; }
+        .menu-item .text { flex-grow: 1; }
+        .menu-item i.arrow { font-size: 12px; color: #666; }
+        .menu-item.active { color: #902b2b; }
+        .menu-item.active i.icon { color: #902b2b; }
+
+        /* --- BREADCRUMB --- */
+        .breadcrumb { background-color: white; padding: 12px 15px; display: flex; align-items: center; gap: 10px; color: #0b3d68; font-size: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); width: 100%; flex-wrap: wrap;}
+        .breadcrumb i.fa-home { font-size: 16px; }
+        .breadcrumb i.fa-chevron-right { font-size: 12px; color: #666; }
+
+        /* --- MAIN CONTAINER --- */
+        .container { padding: 15px; max-width: 600px; margin: 0 auto; width: 100%; }
+        .page-title { color: #1a2a40; font-size: 18px; font-weight: normal; margin-bottom: 15px; margin-top: 5px; }
+        
+        .card { background-color: white; padding: 20px 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-radius: 6px; width: 100%; margin-bottom: 20px; overflow: hidden;}
+        
+        /* --- COMPLAINTS TABLE --- */
+        .table-container { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        table.complaints-table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 650px; }
+        table.complaints-table th { background-color: #122b46; color: white; padding: 12px 8px; font-weight: bold; text-align: left; white-space: nowrap; }
+        table.complaints-table td { padding: 12px 8px; border-bottom: 1px solid #e5e7eb; white-space: nowrap; color: #333; }
+        table.complaints-table tr:last-child td { border-bottom: none; }
+
+        /* --- FORM ELEMENTS --- */
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-size: 13px; font-weight: normal; color: #333; margin-bottom: 8px; }
+        .required-star { color: red; }
+        .form-control { width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 13px; outline: none; background-color: white; }
+        .form-control:focus { border-color: #0b3d68; }
+
+        /* --- EDITOR TOOLBAR & CONTENT --- */
+        .editor-container { border: 1px solid #d1d5db; border-radius: 4px; overflow: hidden; }
+        .editor-toolbar { background-color: #f3f4f6; border-bottom: 1px solid #d1d5db; padding: 6px 8px; display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+        .toolbar-group { display: flex; align-items: center; border-right: 1px solid #d1d5db; padding-right: 6px; gap: 4px; margin-right: 2px; }
+        .toolbar-group:last-child { border-right: none; padding-right: 0; margin-right: 0; }
+        .toolbar-btn { background: none; border: 1px solid transparent; cursor: pointer; padding: 4px 6px; border-radius: 3px; font-size: 11px; display: flex; align-items: center; justify-content: center; }
+        .toolbar-btn:hover { background-color: #e5e7eb; }
+        .toolbar-btn i { color: #4b5563; }
+        .editor-content { min-height: 180px; padding: 12px; font-size: 13px; background-color: white; outline: none; overflow-y: auto; line-height: 1.5; }
+
+        /* --- PROFILE DROPDOWN --- */
+        .profile-container { position: relative; display: inline-block; }
+        .profile-dropdown {
+            position: absolute;
+            top: 45px;
+            right: 0;
+            width: 240px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            display: none;
+            flex-direction: column;
+            z-index: 1000;
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: transform 0.2s ease, opacity 0.2s ease;
+        }
+        .profile-dropdown.show { display: flex; opacity: 1; transform: translateY(0); }
+        .dropdown-header {
+            padding: 15px;
+            background: linear-gradient(135deg, #0b3d68 0%, #1a2a40 100%);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+        .dropdown-avatar { width: 50px; height: 50px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, 0.8); margin-bottom: 8px; object-fit: cover; }
+        .dropdown-name { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+        .dropdown-id { font-size: 11px; opacity: 0.8; }
+        .dropdown-menu-list { display: flex; flex-direction: column; padding: 8px 0; }
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 16px;
+            color: #333;
+            text-decoration: none;
+            font-size: 13px;
+            transition: background 0.2s, color 0.2s;
+            background: transparent;
+            border: none;
+            text-align: left;
+            cursor: pointer;
+            width: 100%;
+        }
+        .dropdown-item:hover { background: #f4f6f9; color: #0b3d68; }
+        .dropdown-item i { font-size: 15px; color: #666; transition: color 0.2s; }
+        .dropdown-item:hover i { color: #0b3d68; }
+        .dropdown-item.logout { border-top: 1px solid #eee; color: #e74c3c; margin-top: 5px; padding-top: 15px; }
+        .dropdown-item.logout:hover { background: #fdf2f2; color: #c0392b; }
+        .dropdown-item.logout:hover i { color: #c0392b; }
+
+    </style>
+</head>
+<body>
+
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-profile-pic">
+                <img src="https://res.cloudinary.com/dftplaxsk/image/upload/v1776757086/1757164224340_2_ra0orp.jpg" alt="Profile" id="sidebarProfilePic">
+            </div>
+            <div class="sidebar-name" id="sidebarProfileName">Aayan Yasin</div>
+        </div>
+        <div class="sidebar-menu-container">
+            <a href="index.html" class="menu-item"><i class="fa-solid fa-border-all icon"></i><span class="text">Dashboard</span></a>
+            <a href="profile.html" class="menu-item"><i class="fa-solid fa-user icon"></i><span class="text">Profile</span></a>
+            <a href="attendance.html" class="menu-item"><i class="fa-solid fa-file-signature icon"></i><span class="text">Attendance</span></a>
+            <a href="results.html" class="menu-item"><i class="fa-solid fa-chart-simple icon"></i><span class="text">Results & Exams</span><i class="fa-solid fa-chevron-down arrow"></i></a>
+            <a href="datesheet.html" class="menu-item"><i class="fa-solid fa-chart-column icon"></i><span class="text">Exam Datesheet</span></a>
+            <a href="notifications.html" class="menu-item"><i class="fa-solid fa-bell icon"></i><span class="text">Notifications</span></a>
+            <a href="404.html?page=Enrollments" class="menu-item"><i class="fa-solid fa-briefcase icon"></i><span class="text">Enrollments</span></a>
+            <div>
+                <div class="menu-item" onclick="const sub = document.getElementById('feedbackSub'); const arrow = this.querySelector('.arrow'); if(sub.style.display === 'block') { sub.style.display = 'none'; arrow.style.transform = 'rotate(0deg)'; } else { sub.style.display = 'block'; arrow.style.transform = 'rotate(180deg)'; }" style="cursor: pointer; display: flex; align-items: center;">
+                    <i class="fa-solid fa-message icon"></i>
+                    <span class="text">Feedback</span>
+                    <i class="fa-solid fa-chevron-down arrow" style="transition: transform 0.2s; font-size: 12px; color: #666; margin-left: auto;"></i>
+                </div>
+                <div id="feedbackSub" style="display: none; background-color: #f4f6f9; border-left: 3px solid #902b2b;">
+                    <a href="404.html?page=QA-Feedback" class="menu-item" style="padding-left: 40px; font-size: 14px;"><i class="fa-solid fa-comments icon" style="width: 30px; font-size: 15px; color: #122b46;"></i><span class="text">QA Feedback</span></a>
+                </div>
+            </div>
+            <a href="schedule.html" class="menu-item"><i class="fa-regular fa-calendar-days icon"></i><span class="text">Time Table</span></a>
+            <a href="invoices.html" class="menu-item"><i class="fa-solid fa-file-invoice-dollar icon"></i><span class="text">Invoices</span></a>
+            <a href="404.html?page=MsThesis" class="menu-item"><i class="fa-solid fa-briefcase icon"></i><span class="text">MS Thesis</span></a>
+            <a href="complaints.html" class="menu-item active"><i class="fa-solid fa-door-open icon"></i><span class="text">Complaints</span></a>
+        </div>
+    </div>
+
+    <div class="top-navbar">
+        <div class="nav-left">
+            <i class="fa-solid fa-bars" id="menuBtn"></i>
+            <i class="fa-solid fa-grip"></i>
+        </div>
+        <div class="nav-right">
+            <div class="notification" onclick="window.location.href='notifications.html'">
+                <i class="fa-regular fa-bell"></i>
+            </div>
+            <div class="profile-container">
+                <div class="profile-pic" id="topProfilePic">
+                    <img src="https://res.cloudinary.com/dftplaxsk/image/upload/v1776757086/1757164224340_2_ra0orp.jpg" alt="Profile" id="navbarProfilePic">
+                </div>
+                <div class="profile-dropdown" id="profileDropdown">
+                    <div class="dropdown-header">
+                        <img src="https://res.cloudinary.com/dftplaxsk/image/upload/v1776757086/1757164224340_2_ra0orp.jpg" class="dropdown-avatar" alt="Profile" id="dropdownProfilePic">
+                        <div class="dropdown-name" id="dropdownProfileName">Aayan Yasin</div>
+                        <div class="dropdown-id" id="dropdownProfileId">IU04-0225-0926</div>
+                    </div>
+                    <div class="dropdown-menu-list">
+                        <a href="profile.html" class="dropdown-item">
+                            <i class="fa-solid fa-user"></i>
+                            <span>View Profile</span>
+                        </a>
+                        <button class="dropdown-item logout" onclick="handleLogout()">
+                            <i class="fa-solid fa-right-from-bracket"></i>
+                            <span>Logout</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="breadcrumb">
+        <i class="fa-solid fa-house"></i>
+        <i class="fa-solid fa-chevron-right"></i>
+        <span>Student Complaints</span>
+    </div>
+
+    <div class="container">
+        <h1 class="page-title">Student Complaints</h1>
+        
+        <!-- Complaints list Card -->
+        <div class="card">
+            <div class="table-container">
+                <table class="complaints-table">
+                    <thead>
+                        <tr>
+                            <th>Reference No</th>
+                            <th>Group</th>
+                            <th>Category</th>
+                            <th>Subject</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Document</th>
+                        </tr>
+                    </thead>
+                    <tbody id="complaintsTableBody">
+                        <tr>
+                            <td colspan="7" style="text-align: center; padding: 25px; color: #666; font-style: italic; background-color: #ffffff;">No Complaints</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Post Complaint Form Card -->
+        <div class="card">
+            <form id="complaintForm" onsubmit="event.preventDefault();">
+                
+                <div class="form-group">
+                    <label>Group <span class="required-star">*</span></label>
+                    <select id="complaintGroup" class="form-control" onchange="updateCategories()">
+                        <option value="">Select Group...</option>
+                        <option value="Academics">Academics</option>
+                        <option value="Finance & Accounts">Finance & Accounts</option>
+                        <option value="Administration">Administration</option>
+                        <option value="IT Support">IT Support</option>
+                        <option value="Library">Library</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Category <span class="required-star">*</span></label>
+                    <select id="complaintCategory" class="form-control">
+                        <option value="">Select Category...</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Subject <span class="required-star">*</span></label>
+                    <input type="text" id="complaintSubject" class="form-control" placeholder="Subject">
+                </div>
+
+                <div class="form-group">
+                    <label>Details <span class="required-star">*</span></label>
+                    <div class="editor-container">
+                        <!-- High Fidelity grey rich text editor toolbar matching screenshot -->
+                        <div class="editor-toolbar">
+                            <div class="toolbar-group">
+                                <button type="button" class="toolbar-btn" onclick="executeEditorCommand('source')" title="Source" style="font-weight: bold; gap: 4px;"><i class="fa-solid fa-code"></i> Source</button>
+                            </div>
+                            <div class="toolbar-group">
+                                <button type="button" class="toolbar-btn" onclick="executeEditorCommand('cut')" title="Cut"><i class="fa-solid fa-scissors"></i></button>
+                                <button type="button" class="toolbar-btn" onclick="executeEditorCommand('copy')" title="Copy"><i class="fa-regular fa-copy"></i></button>
+                                <button type="button" class="toolbar-btn" onclick="executeEditorCommand('paste')" title="Paste"><i class="fa-solid fa-clipboard"></i></button>
+                            </div>
+                            <div class="toolbar-group">
+                                <button type="button" class="toolbar-btn" onclick="executeEditorCommand('undo')" title="Undo"><i class="fa-solid fa-rotate-left"></i></button>
+                                <button type="button" class="toolbar-btn" onclick="executeEditorCommand('redo')" title="Redo"><i class="fa-solid fa-rotate-right"></i></button>
+                            </div>
+                            <div class="toolbar-group">
+                                <button type="button" class="toolbar-btn" onclick="executeEditorCommand('bold')" title="Bold"><i class="fa-solid fa-bold"></i></button>
+                                <button type="button" class="toolbar-btn" onclick="executeEditorCommand('italic')" title="Italic"><i class="fa-solid fa-italic"></i></button>
+                                <button type="button" class="toolbar-btn" onclick="executeEditorCommand('underline')" title="Underline"><i class="fa-solid fa-underline"></i></button>
+                                <button type="button" class="toolbar-btn" onclick="executeEditorCommand('strikeThrough')" title="Strikethrough"><i class="fa-solid fa-strikethrough"></i></button>
+                            </div>
+                            <div class="toolbar-group">
+                                <button type="button" class="toolbar-btn" onclick="executeEditorCommand('subscript')" title="Subscript"><i class="fa-solid fa-subscript"></i></button>
+                                <button type="button" class="toolbar-btn" onclick="executeEditorCommand('superscript')" title="Superscript"><i class="fa-solid fa-superscript"></i></button>
+                                <button type="button" class="toolbar-btn" onclick="executeEditorCommand('removeFormat')" title="Clear Format"><i class="fa-solid fa-eraser"></i></button>
+                            </div>
+                            <div class="toolbar-group">
+                                <button type="button" class="toolbar-btn" onclick="executeEditorCommand('insertUnorderedList')" title="Bullet List"><i class="fa-solid fa-list-ul"></i></button>
+                                <button type="button" class="toolbar-btn" onclick="executeEditorCommand('insertOrderedList')" title="Numbered List"><i class="fa-solid fa-list-ol"></i></button>
+                                <button type="button" class="toolbar-btn" onclick="executeEditorCommand('outdent')" title="Decrease Indent"><i class="fa-solid fa-outdent"></i></button>
+                                <button type="button" class="toolbar-btn" onclick="executeEditorCommand('indent')" title="Increase Indent"><i class="fa-solid fa-indent"></i></button>
+                            </div>
+                            <div class="toolbar-group">
+                                <button type="button" class="toolbar-btn" onclick="executeEditorCommand('insertImage')" title="Image"><i class="fa-regular fa-image"></i></button>
+                                <button type="button" class="toolbar-btn" onclick="executeEditorCommand('insertTable')" title="Table"><i class="fa-solid fa-table"></i></button>
+                                <button type="button" class="toolbar-btn" onclick="executeEditorCommand('insertHorizontalRule')" title="Line"><i class="fa-solid fa-minus"></i></button>
+                            </div>
+                        </div>
+                        <div id="editorContent" class="editor-content" contenteditable="true" data-placeholder="Enter complaint details..."></div>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 25px;">
+                    <label>Supporting Document (Optional)</label>
+                    <div style="display: flex; align-items: center; gap: 12px; border: 1px dashed #d1d5db; padding: 15px; border-radius: 4px; background-color: #fafafa;">
+                        <div style="font-size: 24px; color: #9ca3af;" id="docIcon"><i class="fa-solid fa-file-pdf"></i></div>
+                        <div style="display: flex; flex-direction: column; gap: 4px;">
+                            <input type="file" id="complaintFile" onchange="handleFileSelected(this)" style="display: none;">
+                            <button type="button" onclick="document.getElementById('complaintFile').click()" style="background-color: #f3f4f6; border: 1px solid #d1d5db; border-radius: 4px; padding: 6px 12px; font-size: 12px; font-weight: bold; cursor: pointer; color: #374151;">Choose File</button>
+                            <span id="fileNameLabel" style="font-size: 11px; color: #6b7280;">No file chosen</span>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="button" onclick="submitComplaint()" style="width: 100%; background-color: #0b3d68; color: white; padding: 12px; border: none; border-radius: 4px; font-size: 13px; font-weight: bold; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px;">POST COMPLAINT</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Firebase Script and Logic Integration -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getFirestore, collection, getDocs, addDoc, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+
+        // Firebase configuration matching rest of site
+        const firebaseConfig = {
+            apiKey: "AIzaSyA3-GjLe-n574aqPVrk8kfE2PGK06_JN88",
+            authDomain: "iqrauni-clone-aayan.firebaseapp.com",
+            projectId: "iqrauni-clone-aayan",
+            storageBucket: "iqrauni-clone-aayan.firebasestorage.app",
+            messagingSenderId: "49713197339",
+            appId: "1:49713197339:web:c4aefdddff2191161623be",
+            measurementId: "G-9XBBRXGD41"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        let complaintsData = [];
+
+        // Dynamic categories mapping by Group
+        const categoriesMap = {
+            "Academics": ["Course Registration", "Grade Issue", "Teacher Conduct", "Attendance Correction"],
+            "Finance & Accounts": ["Fee Challan Error", "Scholarship Query", "Fine Waiver Request"],
+            "Administration": ["Admissions", "Transport Issue", "Security Query"],
+            "IT Support": ["Portal Login Issue", "Wi-Fi Access", "Email Activation"],
+            "Library": ["Book Fine Inquiry", "E-Resource Access", "Book Reissue"]
+        };
+
+        // 1. Populate Dynamic Categories
+        window.updateCategories = function() {
+            const groupSelect = document.getElementById('complaintGroup');
+            const categorySelect = document.getElementById('complaintCategory');
+            const selectedGroup = groupSelect.value;
+
+            categorySelect.innerHTML = '<option value="">Select Category...</option>';
+
+            if (selectedGroup && categoriesMap[selectedGroup]) {
+                categoriesMap[selectedGroup].forEach(cat => {
+                    const option = document.createElement('option');
+                    option.value = cat;
+                    option.innerText = cat;
+                    categorySelect.appendChild(option);
+                });
+            }
+        }
+
+        // 2. Fetch student complaints from Firestore
+        async function fetchComplaintsAndRender() {
+            const tableBody = document.getElementById('complaintsTableBody');
+            try {
+                const querySnapshot = await getDocs(collection(db, "complaints"));
+                complaintsData = [];
+                querySnapshot.forEach(docSnap => {
+                    complaintsData.push(docSnap.data());
+                });
+
+                if (complaintsData.length === 0) {
+                    tableBody.innerHTML = `
+                        <tr>
+                            <td colspan="7" style="text-align: center; padding: 25px; color: #666; font-style: italic; background-color: #ffffff;">No Complaints</td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                // Render complaint rows
+                let html = "";
+                complaintsData.forEach(comp => {
+                    html += `
+                        <tr>
+                            <td style="font-weight: bold; color: #122b46;">${comp.referenceNo}</td>
+                            <td>${comp.group}</td>
+                            <td>${comp.category}</td>
+                            <td>${comp.subject}</td>
+                            <td>${comp.date}</td>
+                            <td><span style="background-color: #fef3c7; color: #d97706; padding: 3px 8px; border-radius: 3px; font-weight: bold; font-size: 10px;">${comp.status}</span></td>
+                            <td style="color: #666;">${comp.document}</td>
+                        </tr>
+                    `;
+                });
+                tableBody.innerHTML = html;
+
+            } catch (error) {
+                console.error("Error fetching complaints: ", error);
+                tableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: red; padding: 20px;">Error connecting to Firestore database.</td></tr>`;
+            }
+        }
+
+        // 3. Post a new student complaint to Firestore
+        window.submitComplaint = async function() {
+            const group = document.getElementById('complaintGroup').value;
+            const category = document.getElementById('complaintCategory').value;
+            const subject = document.getElementById('complaintSubject').value;
+            const editor = document.getElementById('editorContent');
+            const details = editor.dataset.sourceView === 'true' ? editor.innerText : editor.innerHTML;
+            const fileInput = document.getElementById('complaintFile');
+
+            if (!group || !category || !subject || !details.trim() || details === "Enter complaint details...") {
+                alert("Please fill in all required fields marked with *");
+                return;
+            }
+
+            const documentName = fileInput.files && fileInput.files[0] ? fileInput.files[0].name : "None";
+            const todayStr = new Date().toISOString().split('T')[0];
+            const randomRef = 'COM-' + new Date().getFullYear() + '-' + Math.floor(10000 + Math.random() * 90000);
+
+            const complaintData = {
+                referenceNo: randomRef,
+                group: group,
+                category: category,
+                subject: subject,
+                details: details,
+                date: todayStr,
+                status: "Pending",
+                document: documentName
+            };
+
+            try {
+                await addDoc(collection(db, "complaints"), complaintData);
+                alert("Complaint posted successfully! Reference ID: " + randomRef);
+
+                // Reset form inputs
+                document.getElementById('complaintGroup').value = "";
+                document.getElementById('complaintCategory').value = "";
+                document.getElementById('complaintSubject').value = "";
+                editor.innerHTML = "";
+                fileInput.value = "";
+                document.getElementById('fileNameLabel').innerText = "No file chosen";
+                document.getElementById('docIcon').innerHTML = '<i class="fa-solid fa-file-pdf"></i>';
+
+                // Re-render
+                await fetchComplaintsAndRender();
+
+            } catch (e) {
+                console.error("Error submitting complaint: ", e);
+                alert("Failed to submit. Please try again.");
+            }
+        }
+
+        // 4. Fetch dynamic student profile details
+        async function fetchStudentAvatar() {
+            try {
+                const docSnap = await getDoc(doc(db, "settings", "profile"));
+                if (docSnap.exists() && docSnap.data()) {
+                    const data = docSnap.data();
+                    if(data.picUrl) {
+                        document.getElementById('sidebarProfilePic').src = data.picUrl;
+                        document.getElementById('navbarProfilePic').src = data.picUrl;
+                        document.getElementById('dropdownProfilePic').src = data.picUrl;
+                    }
+                    if(data.name) {
+                        document.getElementById('sidebarProfileName').innerText = data.name;
+                        document.getElementById('dropdownProfileName').innerText = data.name;
+                    }
+                    if(data.id) {
+                        document.getElementById('dropdownProfileId').innerText = data.id;
+                    }
+                }
+            } catch(e) { console.error("Error avatar sidebar fetch: ", e); }
+        }
+
+        window.handleLogout = async function() {
+            try {
+                await signOut(auth);
+                window.location.href = "login.html";
+            } catch (error) {
+                console.error("Logout error: ", error);
+                alert("Failed to log out.");
+            }
+        }
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                fetchStudentAvatar();
+                fetchComplaintsAndRender();
+            } else {
+                window.location.href = "login.html";
+            }
+        });
+
+    </script>
+
+    <!-- Interactive UI scripts -->
+    <script>
+        // Sidebar Toggles
+        const menuBtn = document.getElementById('menuBtn');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+
+        function toggleSidebar() {
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+        menuBtn.addEventListener('click', toggleSidebar);
+        overlay.addEventListener('click', toggleSidebar);
+
+        // Sidebar Profile dropdown controls (Long press redirect, simple click toggle)
+        const profilePic = document.getElementById('topProfilePic');
+        const profileDropdown = document.getElementById('profileDropdown');
+        let pressTimer;
+        let isLongPress = false;
+
+        function startPress(e) {
+            if (e.type === 'touchstart') {
+                e.preventDefault();
+            }
+            isLongPress = false;
+            pressTimer = window.setTimeout(() => {
+                isLongPress = true;
+                window.location.href = "profile.html";
+            }, 800);
+        }
+
+        function endPress(e) {
+            clearTimeout(pressTimer);
+            if (!isLongPress) {
+                profileDropdown.classList.toggle('show');
+            }
+        }
+
+        profilePic.addEventListener('mousedown', startPress);
+        profilePic.addEventListener('mouseup', endPress);
+        profilePic.addEventListener('mouseleave', () => clearTimeout(pressTimer));
+
+        profilePic.addEventListener('touchstart', startPress);
+        profilePic.addEventListener('touchend', endPress);
+        profilePic.addEventListener('touchcancel', () => clearTimeout(pressTimer));
+
+        window.addEventListener('click', function(e) {
+            if (!profilePic.contains(e.target) && !profileDropdown.contains(e.target)) {
+                profileDropdown.classList.remove('show');
+            }
+        });
+
+        // Rich Text Editor Commands Execution
+        window.executeEditorCommand = function(command) {
+            const editor = document.getElementById('editorContent');
+            
+            if (command === 'source') {
+                if (editor.dataset.sourceView === 'true') {
+                    editor.innerHTML = editor.innerText;
+                    editor.dataset.sourceView = 'false';
+                    editor.style.fontFamily = 'Arial, sans-serif';
+                } else {
+                    editor.innerText = editor.innerHTML;
+                    editor.dataset.sourceView = 'true';
+                    editor.style.fontFamily = 'monospace';
+                }
+            } else if (command === 'insertImage') {
+                const url = prompt("Enter image URL:");
+                if (url) document.execCommand('insertImage', false, url);
+            } else if (command === 'insertTable') {
+                const rows = prompt("Enter rows count:", "2");
+                const cols = prompt("Enter columns count:", "3");
+                if (rows && cols) {
+                    let tableHtml = '<table style="width: 100%; border-collapse: collapse; border: 1px solid #ccc; margin: 10px 0;">';
+                    for(let i=0; i<rows; i++) {
+                        tableHtml += '<tr>';
+                        for(let j=0; j<cols; j++) {
+                            tableHtml += '<td style="border: 1px solid #ccc; padding: 8px;">Cell</td>';
+                        }
+                        tableHtml += '</tr>';
+                    }
+                    tableHtml += '</table>';
+                    document.execCommand('insertHTML', false, tableHtml);
+                }
+            } else if (command === 'insertHorizontalRule') {
+                document.execCommand('insertHorizontalRule');
+            } else {
+                document.execCommand(command, false, null);
+            }
+            editor.focus();
+        }
+
+        // File Selected experience
+        window.handleFileSelected = function(input) {
+            const label = document.getElementById('fileNameLabel');
+            const icon = document.getElementById('docIcon');
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                label.innerText = file.name + ' (' + (file.size / 1024).toFixed(1) + ' KB)';
+                icon.innerHTML = '<i class="fa-solid fa-file-circle-check" style="color: #902b2b;"></i>';
+            } else {
+                label.innerText = 'No file chosen';
+                icon.innerHTML = '<i class="fa-solid fa-file-pdf"></i>';
+            }
+        }
+
+    </script>
+</body>
+</html>
