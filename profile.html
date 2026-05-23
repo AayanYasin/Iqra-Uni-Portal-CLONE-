@@ -562,12 +562,9 @@
             </div>
         </div>
         
-        <!-- Image placeholder notification box -->
-        <div class="notification-banner-box">
-            <div class="banner-img-placeholder">
-                <i class="fa-solid fa-circle-check"></i> Image
-            </div>
-            <a href="404.html?page=Online-Classes" class="banner-link">How to Attend Online Classes</a>
+        <div style="height: 1px; background-color: #e5e7eb; margin: 25px 0 15px 0; width: 100%;"></div>
+        <div style="text-align: center; padding: 10px 0;">
+            <a href="404.html?page=Online-Classes" class="banner-link" style="color: #637381; font-weight: normal; font-size: 13px; text-decoration: none;">HOW TO ATTEND ONLINE CLASSES</a>
         </div>
         
     </div>
@@ -579,48 +576,14 @@
             
             <!-- Modal Internal Switcher -->
             <div class="modal-tab-headers">
-                <div class="modal-tab-btn active" onclick="switchModalTab(event, 'modalHeaderPanel')">Header</div>
-                <div class="modal-tab-btn" onclick="switchModalTab(event, 'modalAboutPanel')">About</div>
+                <div class="modal-tab-btn active" onclick="switchModalTab(event, 'modalAboutPanel')">About</div>
                 <div class="modal-tab-btn" onclick="switchModalTab(event, 'modalBioPanel')">Bio Data</div>
                 <div class="modal-tab-btn" onclick="switchModalTab(event, 'modalStudyPanel')">Study</div>
             </div>
             
             <form id="editProfileForm" onsubmit="saveProfileEdits(event)">
-                <!-- Modal Panel 1: Header / Main Profile Info -->
-                <div id="modalHeaderPanel" class="modal-tab-panel active">
-                    <div class="form-section-header">Basic Info</div>
-                    <div class="form-group">
-                        <label>Student Name</label>
-                        <input type="text" id="inputName" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Student ID</label>
-                        <input type="text" id="inputId" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Faculty / Department</label>
-                        <input type="text" id="inputFaculty" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Career Class</label>
-                        <input type="text" id="inputCareer" placeholder="e.g. Under Graduate" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Degree Program</label>
-                        <input type="text" id="inputProgram" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Current Semester</label>
-                        <input type="text" id="inputSemester" placeholder="e.g. SEMESTER-3" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Profile Pic URL</label>
-                        <input type="text" id="inputPicUrl" placeholder="Image URL">
-                    </div>
-                </div>
-                
                 <!-- Modal Panel 2: About / Contacts -->
-                <div id="modalAboutPanel" class="modal-tab-panel">
+                <div id="modalAboutPanel" class="modal-tab-panel active">
                     <div class="form-section-header">Contact Information</div>
                     <div class="form-group">
                         <label>Email Address</label>
@@ -849,14 +812,6 @@
 
         // Setup dynamic Edit Modal prefill values
         window.openEditModal = function() {
-            document.getElementById('inputName').value = profileState.name;
-            document.getElementById('inputId').value = profileState.id;
-            document.getElementById('inputFaculty').value = profileState.faculty;
-            document.getElementById('inputCareer').value = profileState.career;
-            document.getElementById('inputProgram').value = profileState.program;
-            document.getElementById('inputSemester').value = profileState.semester;
-            document.getElementById('inputPicUrl').value = profileState.picUrl;
-            
             document.getElementById('inputEmail').value = profileState.email;
             document.getElementById('inputPhone').value = profileState.phone;
             document.getElementById('inputEmergency').value = profileState.emergency;
@@ -900,13 +855,14 @@
             event.preventDefault();
             
             const updatedData = {
-                name: document.getElementById('inputName').value,
-                id: document.getElementById('inputId').value,
-                faculty: document.getElementById('inputFaculty').value,
-                career: document.getElementById('inputCareer').value,
-                program: document.getElementById('inputProgram').value,
-                semester: document.getElementById('inputSemester').value,
-                picUrl: document.getElementById('inputPicUrl').value || profileState.picUrl,
+                // Read official headers from profileState to preserve them
+                name: profileState.name,
+                id: profileState.id,
+                faculty: profileState.faculty,
+                career: profileState.career,
+                program: profileState.program,
+                semester: profileState.semester,
+                picUrl: profileState.picUrl,
                 
                 email: document.getElementById('inputEmail').value,
                 phone: document.getElementById('inputPhone').value,
