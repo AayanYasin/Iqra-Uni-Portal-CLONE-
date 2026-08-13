@@ -439,8 +439,19 @@
                 courseSnap.forEach(d => coursesData.push({id: d.id, ...d.data()}));
 
                 const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-                let updatesNeeded = {}; 
+                let updatesNeeded = {};
 
+                // First pass: strip any records that pre-date the semester start from existing courses
+                for (let course of coursesData) {
+                    let records = course.attendanceRecords || [];
+                    let filtered = records.filter(r => r.date >= formatDate(startDate));
+                    if (filtered.length !== records.length) {
+                        course.attendanceRecords = filtered;
+                        updatesNeeded[course.id] = filtered;
+                    }
+                }
+
+                // Second pass: add missing records from startDate to today
                 for (let d = new Date(startDate); d <= today; d.setDate(d.getDate() + 1)) {
                     let dayName = days[d.getDay()];
                     let dateString = formatDate(d);
@@ -457,7 +468,7 @@
                             if (!records.find(r => r.date === dateString)) {
                                 records.push({ date: dateString, status: "Present" });
                                 coursesData[courseIndex].attendanceRecords = records;
-                                updatesNeeded[course.id] = records; 
+                                updatesNeeded[course.id] = records;
                             }
                         } else {
                             let newCourse = {
@@ -468,7 +479,7 @@
                             };
                             try {
                                 const docRef = await addDoc(collection(db, "courses"), newCourse);
-                                coursesData.push({id: docRef.id, ...newCourse}); 
+                                coursesData.push({id: docRef.id, ...newCourse});
                             } catch(e) {}
                         }
                     }
@@ -503,7 +514,11 @@
                     option.text = data.courseName;
                     selectDropdown.appendChild(option);
 
-                    const records = data.attendanceRecords || [];
+                    const allRecords = data.attendanceRecords || [];
+                    // Only count records on or after the semester start date
+                    const records = globalSemesterStart
+                        ? allRecords.filter(r => r.date >= globalSemesterStart)
+                        : allRecords;
                     const classesConducted = records.length;
                     const classesAttended = records.filter(r => r.status === "Present").length;
                     
