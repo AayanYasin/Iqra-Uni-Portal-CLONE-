@@ -484,6 +484,84 @@
                         ]
                     }
                 ]
+            },
+            {
+                termId: "IU04.SPRING-26",
+                gradePoints: "40.99",
+                cumulativeGp: "105.67",
+                attemptedCh: "15.0",
+                earnedCh: "15.0",
+                cumulativeCh: "33.0",
+                sgpa: "2.73",
+                cgpa: "3.2",
+                courses: [
+                    {
+                        courseName: "ADVANCED PROGRAMMING",
+                        creditHours: "2.0",
+                        gradePts: "4.66",
+                        finalGrade: "C+",
+                        assessments: [
+                            { type: "Class Participation", weightage: "35.0%", total: "35.0", obtained: "16.00", percentage: "45.71%" },
+                            { type: "Mid Term", weightage: "20.0%", total: "20.0", obtained: "15.00", percentage: "75.00%" },
+                            { type: "Final Term", weightage: "45.0%", total: "45.0", obtained: "38.00", percentage: "84.44%" }
+                        ]
+                    },
+                    {
+                        courseName: "TECHNOPRENEURSHIP",
+                        creditHours: "2.0",
+                        gradePts: "6.0",
+                        finalGrade: "B",
+                        assessments: [
+                            { type: "Class Participation", weightage: "35.0%", total: "35.0", obtained: "25.00", percentage: "71.43%" },
+                            { type: "Mid Term", weightage: "20.0%", total: "20.0", obtained: "20.00", percentage: "100.00%" },
+                            { type: "Final Term", weightage: "45.0%", total: "45.0", obtained: "32.00", percentage: "71.11%" }
+                        ]
+                    },
+                    {
+                        courseName: "DISCRETE STRUCTURES",
+                        creditHours: "3.0",
+                        gradePts: "6.99",
+                        finalGrade: "C+",
+                        assessments: [
+                            { type: "Mid Term", weightage: "20.0%", total: "20.0", obtained: "14.00", percentage: "70.00%" },
+                            { type: "Class Participation", weightage: "35.0%", total: "35.0", obtained: "25.00", percentage: "71.43%" },
+                            { type: "Final Term", weightage: "45.0%", total: "45.0", obtained: "26.00", percentage: "57.78%" }
+                        ]
+                    },
+                    {
+                        courseName: "OBJECT ORIENTED PROGRAMMING",
+                        creditHours: "3.0",
+                        gradePts: "11.01",
+                        finalGrade: "A-",
+                        assessments: [
+                            { type: "Class Participation", weightage: "35.0%", total: "35.0", obtained: "32.00", percentage: "91.43%" },
+                            { type: "Mid Term", weightage: "20.0%", total: "20.0", obtained: "14.00", percentage: "70.00%" },
+                            { type: "Final Term", weightage: "45.0%", total: "45.0", obtained: "39.00", percentage: "86.67%" }
+                        ]
+                    },
+                    {
+                        courseName: "DIGITAL LOGIC DESIGN",
+                        creditHours: "2.0",
+                        gradePts: "5.34",
+                        finalGrade: "B-",
+                        assessments: [
+                            { type: "Mid Term", weightage: "20.0%", total: "20.0", obtained: "11.00", percentage: "55.00%" },
+                            { type: "Class Participation", weightage: "35.0%", total: "35.0", obtained: "28.00", percentage: "80.00%" },
+                            { type: "Final Term", weightage: "45.0%", total: "45.0", obtained: "35.00", percentage: "77.78%" }
+                        ]
+                    },
+                    {
+                        courseName: "MULTIVARIABLE CALCULUS",
+                        creditHours: "3.0",
+                        gradePts: "6.99",
+                        finalGrade: "C+",
+                        assessments: [
+                            { type: "Class Participation", weightage: "35.0%", total: "35.0", obtained: "20.00", percentage: "57.14%" },
+                            { type: "Mid Term", weightage: "20.0%", total: "20.0", obtained: "20.00", percentage: "100.00%" },
+                            { type: "Final Term", weightage: "45.0%", total: "45.0", obtained: "27.00", percentage: "60.00%" }
+                        ]
+                    }
+                ]
             }
         ];
 
@@ -843,9 +921,222 @@
             detailsRow.classList.toggle('show');
         }
 
-        // Download Transcript print shortcut
+        // Download Transcript - generates a pixel-perfect print page matching the official PDF
         window.downloadTranscript = function() {
-            window.print();
+            if (!loadedResults || loadedResults.length === 0) {
+                alert("Results not loaded yet. Please wait a moment and try again.");
+                return;
+            }
+
+            // Sort results chronologically (same logic as fetchStandingsAndRender)
+            const sorted = [...loadedResults].sort((a, b) => {
+                const seasons = { "SUMMER": 1, "FALL": 2, "SPRING": 3, "WINTER": 4 };
+                const parseT = (id) => {
+                    const parts = id.split('.');
+                    const rest = parts[1]; // e.g. FALL-25
+                    const [season, yr] = rest.split('-');
+                    return parseInt(yr) * 10 + (seasons[season] || 5);
+                };
+                return parseT(a.termId) - parseT(b.termId);
+            });
+
+            // Course code map matching the PDF
+            const codeMap = {
+                // SUMMER-25
+                "APPLICATION OF INFORMATION & COMMUNICATION TECHNOLOGIES(LAB)": "GER111-L",
+                "APPLICATION OF INFORMATION & COMMUNICATION TECHNOLOGIES": "GER111",
+                "CALCULUS AND ANALYTIC GEOMETRY": "GER131",
+                // FALL-25
+                "APPLIED PHYSICS": "GER152",
+                "APPLIED PHYSICS (LAB)": "GER152-L",
+                "PROGRAMMING FUNDAMENTALS": "CMC111",
+                "PROGRAMMING FUNDAMENTALS (LAB)": "CMC111-L",
+                "ISLAMIC STUDIES": "GER141",
+                "FUNCTIONAL ENGLISH": "GER121",
+                // SPRING-26
+                "ADVANCED PROGRAMMING": "CSE419",
+                "TECHNOPRENEURSHIP": "GER46203",
+                "DISCRETE STRUCTURES": "GER132",
+                "OBJECT ORIENTED PROGRAMMING": "CMC112",
+                "DIGITAL LOGIC DESIGN": "CMC12201",
+                "MULTIVARIABLE CALCULUS": "MTE111"
+            };
+
+            const today = new Date().toISOString().split('T')[0];
+
+            // Build semester HTML blocks
+            let semestersHtml = "";
+            let semNum = 1;
+            sorted.forEach(term => {
+                let coursesHtml = "";
+                term.courses.forEach(c => {
+                    const code = codeMap[c.courseName] || c.courseCode || "";
+                    coursesHtml += `
+                        <tr class="course-row">
+                            <td class="code-cell">${code}</td>
+                            <td class="name-cell">${c.courseName}</td>
+                            <td class="num-cell">${c.creditHours}</td>
+                            <td class="grade-cell">${c.finalGrade}</td>
+                        </tr>`;
+                });
+
+                semestersHtml += `
+                    <div class="semester-block">
+                        <div class="sem-title">Semester ${semNum} [ ${term.termId} ]</div>
+                        <table class="course-table">
+                            <tbody>
+                                ${coursesHtml}
+                                <tr class="total-row">
+                                    <td></td>
+                                    <td><strong>Total ${term.termId}</strong></td>
+                                    <td class="num-cell"><strong>${term.attemptedCh}</strong></td>
+                                    <td class="grade-cell"><strong>${term.sgpa}</strong></td>
+                                </tr>
+                                <tr class="total-row">
+                                    <td></td>
+                                    <td><strong>Total Beginning To Date</strong></td>
+                                    <td class="num-cell"><strong>${term.cumulativeCh}</strong></td>
+                                    <td class="grade-cell"><strong>${term.cgpa}</strong></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>`;
+                semNum++;
+            });
+
+            // Get last term for footer summary
+            const last = sorted[sorted.length - 1];
+
+            const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Unofficial Transcript - Aayan Yasin</title>
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Arial&display=swap');
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, sans-serif; font-size: 11px; color: #000; background: white; padding: 30px 35px; max-width: 800px; margin: 0 auto; }
+
+    /* Header */
+    .header { display: flex; align-items: center; justify-content: center; margin-bottom: 4px; gap: 12px; }
+    .logo-box { display: flex; align-items: center; gap: 6px; }
+    .logo-iqra { font-size: 18px; font-weight: 900; color: #0b3d68; letter-spacing: -1px; }
+    .logo-iu { background: #0b3d68; color: white; font-size: 15px; font-weight: 900; padding: 2px 6px; }
+    .uni-name { font-size: 20px; font-weight: bold; color: #000; }
+    .subtitle { text-align: center; font-size: 12px; font-weight: bold; margin-bottom: 16px; }
+
+    /* Student info */
+    .student-info-bar { display: flex; align-items: flex-start; border-top: 1px solid #ccc; border-bottom: 1px solid #ccc; padding: 10px 0; margin-bottom: 20px; gap: 0; }
+    .info-col { flex: 1; }
+    .info-label { font-size: 10px; color: #555; font-weight: bold; margin-bottom: 3px; }
+    .info-val { font-size: 11px; color: #0047ab; font-weight: normal; }
+    .info-val.dark { color: #000; }
+    .photo-box { width: 55px; height: 65px; border: 1px solid #ccc; overflow: hidden; flex-shrink: 0; margin-left: 10px; }
+    .photo-box img { width: 100%; height: 100%; object-fit: cover; }
+
+    /* Semester */
+    .semester-block { margin-bottom: 20px; }
+    .sem-title { font-size: 12px; font-weight: bold; color: #000; margin-bottom: 6px; padding-bottom: 3px; border-bottom: 1px solid #ddd; }
+
+    .course-table { width: 100%; border-collapse: collapse; }
+    .course-table td { padding: 3px 5px; }
+    .course-row .code-cell { color: #0047ab; width: 90px; font-weight: normal; }
+    .course-row .name-cell { color: #0047ab; font-weight: normal; }
+    .num-cell { text-align: right; width: 60px; }
+    .grade-cell { text-align: right; width: 50px; }
+
+    .total-row td { padding: 2px 5px; font-size: 10px; color: #333; }
+    .total-row td:first-child { width: 90px; }
+    .total-row .num-cell strong { color: #000; }
+    .total-row .grade-cell strong { color: #000; }
+
+    /* Footer summary */
+    .divider { border: none; border-top: 1px solid #bbb; margin: 20px 0 15px 0; }
+    .summary-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+    .summary-table td { padding: 3px 5px; font-size: 11px; }
+    .summary-table td:last-child { text-align: right; font-weight: bold; color: #0047ab; width: 80px; }
+    .summary-table tr:nth-child(4) td { color: #c0392b; font-weight: bold; }
+    .summary-table tr:nth-child(4) td:last-child { color: #c0392b; }
+
+    .end-line { text-align: center; font-size: 12px; font-weight: bold; margin-top: 15px; }
+
+    @media print {
+        body { padding: 15px 20px; }
+        @page { margin: 10mm; size: A4; }
+    }
+</style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="logo-box">
+            <span class="logo-iqra">IQRA<br>UNIVERSITY</span>
+            <span class="logo-iu">IU</span>
+        </div>
+        <span class="uni-name">Iqra University (North)</span>
+    </div>
+    <div class="subtitle">Unofficial Transcript</div>
+
+    <div class="student-info-bar">
+        <div class="info-col">
+            <div class="info-label">Registration No</div>
+            <div class="info-val">IU04-0225-0926</div>
+        </div>
+        <div class="info-col">
+            <div class="info-label">Name</div>
+            <div class="info-val">Aayan Yasin</div>
+        </div>
+        <div class="info-col">
+            <div class="info-label">DOB</div>
+            <div class="info-val dark">2006-02-25</div>
+        </div>
+        <div class="info-col" style="flex:2;">
+            <div class="info-label">Program</div>
+            <div class="info-val" style="color:#0047ab; font-weight:bold;">BACHELOR OF SCIENCE (COMPUTER SCIENCE)</div>
+        </div>
+        <div class="info-col">
+            <div class="info-label">Current Date</div>
+            <div class="info-val dark">${today}</div>
+        </div>
+        <div class="photo-box">
+            <img src="https://res.cloudinary.com/dftplaxsk/image/upload/v1776757086/1757164224340_2_ra0orp.jpg" alt="Photo">
+        </div>
+    </div>
+
+    ${semestersHtml}
+
+    <hr class="divider">
+
+    <table class="summary-table">
+        <tr>
+            <td>Credit Hours Attempted</td>
+            <td>${last.cumulativeCh}</td>
+        </tr>
+        <tr>
+            <td>Credit Hours Earned</td>
+            <td>${last.cumulativeCh}</td>
+        </tr>
+        <tr>
+            <td>Cumulative Grade Point Average</td>
+            <td>${last.cgpa}</td>
+        </tr>
+        <tr>
+            <td>Credit Hours accepted towards degree completion</td>
+            <td>${last.cumulativeCh}</td>
+        </tr>
+    </table>
+
+    <div class="end-line">-- End Transcript --</div>
+
+    <script>
+        window.onload = function() { window.print(); }
+    <\/script>
+</body>
+</html>`;
+
+            const win = window.open('', '_blank');
+            win.document.write(html);
+            win.document.close();
         }
 
     </script>
