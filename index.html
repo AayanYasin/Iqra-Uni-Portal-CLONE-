@@ -780,7 +780,7 @@
             pressTimer = window.setTimeout(() => {
                 isLongPress = true;
                 openAdminModal();
-            }, 800); // 800ms hold
+            }, 2500); // Extended hold delay (2.5s) to avoid accidental triggers
         }
 
         function endPress(e) {
