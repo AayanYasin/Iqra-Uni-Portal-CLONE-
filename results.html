@@ -1081,222 +1081,387 @@
 
         // Download Transcript - generates a pixel-perfect print page matching the official PDF
         window.downloadTranscript = function() {
-            if (!loadedResults || loadedResults.length === 0) {
-                alert("Results not loaded yet. Please wait a moment and try again.");
-                return;
-            }
-
-            // Sort results chronologically (same logic as fetchStandingsAndRender)
-            const termSeasonOrder = { "SPRING": 1, "SUMMER": 2, "FALL": 3, "WINTER": 4 };
-            const sorted = [...loadedResults].sort((a, b) => {
-                const parseT = (id) => {
-                    const parts = id.split('.');
-                    const rest = parts[1] || parts[0]; // e.g. FALL-25
-                    const [season, yr] = rest.split('-');
-                    return parseInt(yr) * 10 + (termSeasonOrder[season] || 5);
-                };
-                return parseT(a.termId) - parseT(b.termId);
-            });
-
-            // Course code map matching the PDF
-            const codeMap = {
-                // SUMMER-25
-                "APPLICATION OF INFORMATION & COMMUNICATION TECHNOLOGIES(LAB)": "GER111-L",
-                "APPLICATION OF INFORMATION & COMMUNICATION TECHNOLOGIES": "GER111",
-                "CALCULUS AND ANALYTIC GEOMETRY": "GER131",
-                // FALL-25
-                "APPLIED PHYSICS": "GER152",
-                "APPLIED PHYSICS (LAB)": "GER152-L",
-                "PROGRAMMING FUNDAMENTALS": "CMC111",
-                "PROGRAMMING FUNDAMENTALS (LAB)": "CMC111-L",
-                "ISLAMIC STUDIES": "GER141",
-                "FUNCTIONAL ENGLISH": "GER121",
-                // SPRING-26
-                "ADVANCED PROGRAMMING": "CSE419",
-                "TECHNOPRENEURSHIP": "GER46203",
-                "DISCRETE STRUCTURES": "GER132",
-                "OBJECT ORIENTED PROGRAMMING": "CMC112",
-                "DIGITAL LOGIC DESIGN": "CMC12201",
-                "MULTIVARIABLE CALCULUS": "MTE111",
-                // SUMMER-26
-                "DIGITAL LOGIC DESIGN (LAB)": "CMC122-L",
-                "PROBABILITY & STATISTICS": "MTE212",
-                // FALL-26
-                "LINEAR ALGEBRA": "MTE213",
-                "THEORY OF AUTOMATA": "CSC252",
-                "OBJECT ORIENTED PROGRAMMING (LAB)": "CMC112-L",
-                "MACHINE LEARNING": "CSE383",
-                "EXPOSITORY WRITING": "GER122"
-            };
+            // Official terms data matching the official IU transcript record
+            const officialTerms = [
+                {
+                    termId: "IU04.SUMMER-25",
+                    attemptedCh: "6.0",
+                    sgpa: "3.39",
+                    cumulativeCh: "6.0",
+                    cgpa: "3.39",
+                    courses: [
+                        { code: "GER111-L", name: "APPLICATION OF INFORMATION & COMMUNICATION TECHNOLOGIES(LAB)", ch: "1.0", grade: "A" },
+                        { code: "GER111", name: "APPLICATION OF INFORMATION & COMMUNICATION TECHNOLOGIES", ch: "2.0", grade: "A-" },
+                        { code: "GER131", name: "CALCULUS AND ANALYTIC GEOMETRY", ch: "3.0", grade: "B" }
+                    ]
+                },
+                {
+                    termId: "IU04.FALL-25",
+                    attemptedCh: "12.0",
+                    sgpa: "3.70",
+                    cumulativeCh: "18.0",
+                    cgpa: "3.59",
+                    courses: [
+                        { code: "GER152", name: "APPLIED PHYSICS", ch: "2.0", grade: "A-" },
+                        { code: "GER152-L", name: "APPLIED PHYSICS (LAB)", ch: "1.0", grade: "A" },
+                        { code: "CMC111", name: "PROGRAMMING FUNDAMENTALS", ch: "3.0", grade: "A-" },
+                        { code: "CMC111-L", name: "PROGRAMMING FUNDAMENTALS (LAB)", ch: "1.0", grade: "A" },
+                        { code: "GER141", name: "ISLAMIC STUDIES", ch: "2.0", grade: "A" },
+                        { code: "GER121", name: "FUNCTIONAL ENGLISH", ch: "3.0", grade: "B+" }
+                    ]
+                },
+                {
+                    termId: "IU04.SPRING-26",
+                    attemptedCh: "15.0",
+                    sgpa: "2.73",
+                    cumulativeCh: "33.0",
+                    cgpa: "3.20",
+                    courses: [
+                        { code: "CSE419", name: "ADVANCED PROGRAMMING", ch: "2.0", grade: "C+" },
+                        { code: "GER46203", name: "TECHNOPRENEURSHIP", ch: "2.0", grade: "B" },
+                        { code: "GER132", name: "DISCRETE STRUCTURES", ch: "3.0", grade: "C+" },
+                        { code: "CMC112", name: "OBJECT ORIENTED PROGRAMMING", ch: "3.0", grade: "A-" },
+                        { code: "CMC12201", name: "DIGITAL LOGIC DESIGN", ch: "2.0", grade: "B-" },
+                        { code: "MTE111", name: "MULTIVARIABLE CALCULUS", ch: "3.0", grade: "C+" }
+                    ]
+                },
+                {
+                    termId: "IU04.SUMMER-26",
+                    attemptedCh: "4.0",
+                    sgpa: "2.58",
+                    cumulativeCh: "37.0",
+                    cgpa: "3.13",
+                    courses: [
+                        { code: "CMC122-L00", name: "DIGITAL LOGIC DESIGN (LAB)", ch: "1.0", grade: "B+" },
+                        { code: "MTE212", name: "PROBABILITY & STATISTICS", ch: "3.0", grade: "C+" }
+                    ]
+                }
+            ];
 
             const today = new Date().toISOString().split('T')[0];
 
-            // Build semester HTML blocks
             let semestersHtml = "";
             let semNum = 1;
-            sorted.forEach(term => {
-                let coursesHtml = "";
+            officialTerms.forEach(term => {
+                let coursesRows = "";
                 term.courses.forEach(c => {
-                    const code = codeMap[c.courseName] || c.courseCode || "";
-                    coursesHtml += `
-                        <tr class="course-row">
-                            <td class="code-cell">${code}</td>
-                            <td class="name-cell">${c.courseName}</td>
-                            <td class="num-cell">${c.creditHours}</td>
-                            <td class="grade-cell">${c.finalGrade}</td>
-                        </tr>`;
+                    coursesRows += `
+                    <tr class="course-row">
+                        <td class="cell-code">${c.code}</td>
+                        <td class="cell-title">${c.name}</td>
+                        <td class="cell-ch">${c.ch}</td>
+                        <td class="cell-grade">${c.grade}</td>
+                    </tr>`;
                 });
 
                 semestersHtml += `
-                    <div class="semester-block">
-                        <div class="sem-title">Semester ${semNum} [ ${term.termId} ]</div>
-                        <table class="course-table">
-                            <tbody>
-                                ${coursesHtml}
-                                <tr class="total-row">
-                                    <td></td>
-                                    <td><strong>Total ${term.termId}</strong></td>
-                                    <td class="num-cell"><strong>${term.attemptedCh}</strong></td>
-                                    <td class="grade-cell"><strong>${term.sgpa}</strong></td>
-                                </tr>
-                                <tr class="total-row">
-                                    <td></td>
-                                    <td><strong>Total Beginning To Date</strong></td>
-                                    <td class="num-cell"><strong>${term.cumulativeCh}</strong></td>
-                                    <td class="grade-cell"><strong>${term.cgpa}</strong></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>`;
+                <div class="semester-block">
+                    <div class="semester-title">Semester ${semNum} [ ${term.termId} ]</div>
+                    <table class="course-table">
+                        <colgroup>
+                            <col class="col-code">
+                            <col class="col-title">
+                            <col class="col-ch">
+                            <col class="col-grade">
+                        </colgroup>
+                        <tbody>
+                            ${coursesRows}
+                            <tr>
+                                <td></td>
+                                <td></td>
+                                <td colspan="2" class="total-divider-cell"></td>
+                            </tr>
+                            <tr class="total-row">
+                                <td></td>
+                                <td>Total ${term.termId}</td>
+                                <td class="cell-ch">${term.attemptedCh}</td>
+                                <td class="cell-grade">${term.sgpa}</td>
+                            </tr>
+                            <tr class="total-row">
+                                <td></td>
+                                <td>Total Beginning To Date</td>
+                                <td class="cell-ch">${term.cumulativeCh}</td>
+                                <td class="cell-grade">${term.cgpa}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="divider-line"></div>
+                </div>`;
                 semNum++;
             });
-
-            // Get last term for footer summary
-            const last = sorted[sorted.length - 1];
 
             const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Unofficial Transcript - Aayan Yasin</title>
+<title>Unofficial Transcript - Iqra University</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,300;0,400;0,700;1,400&display=swap" rel="stylesheet">
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Arial&display=swap');
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: Arial, sans-serif; font-size: 11px; color: #000; background: white; padding: 30px 35px; max-width: 800px; margin: 0 auto; }
+    @page {
+        size: letter;
+        margin: 10mm 14mm 10mm 14mm;
+    }
+    body {
+        font-family: 'Lato', sans-serif;
+        background: #fff;
+        color: #000;
+        margin: 0;
+        padding: 15px 22px;
+        max-width: 800px;
+        margin-left: auto;
+        margin-right: auto;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+    .header-container {
+        position: relative;
+        text-align: center;
+        padding-top: 2px;
+        min-height: 48px;
+    }
+    .header-logo {
+        position: absolute;
+        left: 0;
+        top: 2px;
+        width: 122px;
+        height: auto;
+    }
+    .uni-heading {
+        font-size: 27px;
+        font-weight: 400;
+        color: #000;
+        margin: 0;
+        line-height: 1.15;
+    }
+    .sub-heading {
+        font-size: 13.5px;
+        font-weight: 700;
+        color: #000;
+        margin-top: 6px;
+    }
+    .divider-line {
+        height: 1px;
+        background-color: #e4e4e4;
+        width: 100%;
+        margin: 15px 0 16px 0;
+    }
+    .student-info-row {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+    }
+    .student-fields {
+        display: flex;
+        align-items: flex-start;
+        gap: 32px;
+        flex: 1;
+    }
+    .field-col {
+        display: flex;
+        flex-direction: column;
+    }
+    .field-label {
+        font-size: 10.2px;
+        font-weight: 700;
+        color: #102a4e;
+        margin-bottom: 4px;
+        letter-spacing: -0.1px;
+    }
+    .field-value {
+        font-size: 12px;
+        font-weight: 700;
+        color: #0058b2;
+        letter-spacing: -0.1px;
+    }
+    .photo-frame {
+        width: 58px;
+        height: 58px;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        padding: 3px;
+        background: #fff;
+        flex-shrink: 0;
+        margin-left: 15px;
+        box-sizing: border-box;
+    }
+    .photo-frame img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 2px;
+        display: block;
+    }
+    .semester-block {
+        margin-bottom: 10px;
+    }
+    .semester-title {
+        font-size: 13.5px;
+        font-weight: 400;
+        color: #000;
+        margin-bottom: 5px;
+    }
+    .course-table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+    }
+    .course-table col.col-code { width: 140px; }
+    .course-table col.col-title { width: auto; }
+    .course-table col.col-ch { width: 65px; }
+    .course-table col.col-grade { width: 70px; }
 
-    /* Header */
-    .header { display: flex; align-items: center; justify-content: center; margin-bottom: 4px; gap: 12px; }
-    .logo-box { display: flex; align-items: center; gap: 6px; }
-    .logo-iqra { font-size: 18px; font-weight: 900; color: #0b3d68; letter-spacing: -1px; }
-    .logo-iu { background: #0b3d68; color: white; font-size: 15px; font-weight: 900; padding: 2px 6px; }
-    .uni-name { font-size: 20px; font-weight: bold; color: #000; }
-    .subtitle { text-align: center; font-size: 12px; font-weight: bold; margin-bottom: 16px; }
+    .course-row td {
+        padding: 2.2px 0;
+        font-size: 10.2px;
+        font-weight: 700;
+        color: #004c99;
+    }
+    .course-row .cell-code { text-align: left; }
+    .course-row .cell-title { text-align: left; }
+    .course-row .cell-ch { text-align: right; padding-right: 15px; }
+    .course-row .cell-grade { text-align: right; padding-right: 25px; }
 
-    /* Student info */
-    .student-info-bar { display: flex; align-items: flex-start; border-top: 1px solid #ccc; border-bottom: 1px solid #ccc; padding: 10px 0; margin-bottom: 20px; gap: 0; }
-    .info-col { flex: 1; }
-    .info-label { font-size: 10px; color: #555; font-weight: bold; margin-bottom: 3px; }
-    .info-val { font-size: 11px; color: #0047ab; font-weight: normal; }
-    .info-val.dark { color: #000; }
-    .photo-box { width: 55px; height: 65px; border: 1px solid #ccc; overflow: hidden; flex-shrink: 0; margin-left: 10px; }
-    .photo-box img { width: 100%; height: 100%; object-fit: cover; }
+    .total-divider-cell {
+        border-top: 1px solid #dde1e5;
+        padding-top: 2px;
+    }
+    .total-row td {
+        padding: 1.5px 0;
+        font-size: 8.5px;
+        font-weight: 700;
+        color: #000;
+    }
+    .total-row .cell-ch { text-align: right; padding-right: 15px; }
+    .total-row .cell-grade { text-align: right; padding-right: 25px; }
 
-    /* Semester */
-    .semester-block { margin-bottom: 20px; }
-    .sem-title { font-size: 12px; font-weight: bold; color: #000; margin-bottom: 6px; padding-bottom: 3px; border-bottom: 1px solid #ddd; }
+    .summary-table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+        margin-top: 2px;
+    }
+    .summary-table col.col-space { width: 140px; }
+    .summary-table col.col-label { width: auto; }
+    .summary-table col.col-val { width: 65px; }
+    .summary-table col.col-end { width: 70px; }
 
-    .course-table { width: 100%; border-collapse: collapse; }
-    .course-table td { padding: 3px 5px; }
-    .course-row .code-cell { color: #0047ab; width: 90px; font-weight: normal; }
-    .course-row .name-cell { color: #0047ab; font-weight: normal; }
-    .num-cell { text-align: right; width: 60px; }
-    .grade-cell { text-align: right; width: 50px; }
+    .summary-table tr td {
+        padding: 2px 0;
+        font-size: 8.5px;
+        font-weight: 700;
+        color: #000;
+    }
+    .summary-table tr td.cell-val {
+        text-align: right;
+        padding-right: 15px;
+    }
 
-    .total-row td { padding: 2px 5px; font-size: 10px; color: #333; }
-    .total-row td:first-child { width: 90px; }
-    .total-row .num-cell strong { color: #000; }
-    .total-row .grade-cell strong { color: #000; }
-
-    /* Footer summary */
-    .divider { border: none; border-top: 1px solid #bbb; margin: 20px 0 15px 0; }
-    .summary-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-    .summary-table td { padding: 3px 5px; font-size: 11px; }
-    .summary-table td:last-child { text-align: right; font-weight: bold; color: #0047ab; width: 80px; }
-    .summary-table tr:nth-child(4) td { color: #c0392b; font-weight: bold; }
-    .summary-table tr:nth-child(4) td:last-child { color: #c0392b; }
-
-    .end-line { text-align: center; font-size: 12px; font-weight: bold; margin-top: 15px; }
+    .end-transcript {
+        text-align: center;
+        font-size: 13.5px;
+        font-weight: 400;
+        color: #000;
+        margin-top: 26px;
+        margin-bottom: 25px;
+    }
 
     @media print {
-        body { padding: 15px 20px; }
-        @page { margin: 10mm; size: A4; }
+        body {
+            padding: 0;
+            max-width: 100%;
+        }
     }
 </style>
 </head>
 <body>
 
-    <div class="header">
-        <div class="logo-box">
-            <span class="logo-iqra">IQRA<br>UNIVERSITY</span>
-            <span class="logo-iu">IU</span>
-        </div>
-        <span class="uni-name">Iqra University (North)</span>
+    <div class="header-container">
+        <img src="logo_org.png" onerror="this.src='https://app.iqra.edu.pk/odoocms_assets/static/6/logo_org.png'" alt="Iqra University" class="header-logo">
+        <h1 class="uni-heading">Iqra University (North)</h1>
+        <div class="sub-heading">Unofficial Transcript</div>
     </div>
-    <div class="subtitle">Unofficial Transcript</div>
 
-    <div class="student-info-bar">
-        <div class="info-col">
-            <div class="info-label">Registration No</div>
-            <div class="info-val">IU04-0225-0926</div>
+    <div class="divider-line"></div>
+
+    <div class="student-info-row">
+        <div class="student-fields">
+            <div class="field-col">
+                <span class="field-label">Registration No</span>
+                <span class="field-value">IU04-0225-0926</span>
+            </div>
+            <div class="field-col">
+                <span class="field-label">Name</span>
+                <span class="field-value">Aayan Yasin</span>
+            </div>
+            <div class="field-col">
+                <span class="field-label">DOB</span>
+                <span class="field-value">2006-02-25</span>
+            </div>
+            <div class="field-col">
+                <span class="field-label">Program</span>
+                <span class="field-value">BACHELOR OF SCIENCE (COMPUTER SCIENCE)</span>
+            </div>
+            <div class="field-col">
+                <span class="field-label">Current Date</span>
+                <span class="field-value">${today}</span>
+            </div>
         </div>
-        <div class="info-col">
-            <div class="info-label">Name</div>
-            <div class="info-val">Aayan Yasin</div>
-        </div>
-        <div class="info-col">
-            <div class="info-label">DOB</div>
-            <div class="info-val dark">2006-02-25</div>
-        </div>
-        <div class="info-col" style="flex:2;">
-            <div class="info-label">Program</div>
-            <div class="info-val" style="color:#0047ab; font-weight:bold;">BACHELOR OF SCIENCE (COMPUTER SCIENCE)</div>
-        </div>
-        <div class="info-col">
-            <div class="info-label">Current Date</div>
-            <div class="info-val dark">${today}</div>
-        </div>
-        <div class="photo-box">
-            <img src="https://res.cloudinary.com/dftplaxsk/image/upload/v1776757086/1757164224340_2_ra0orp.jpg" alt="Photo">
+        <div class="photo-frame">
+            <img src="https://res.cloudinary.com/dftplaxsk/image/upload/v1776757086/1757164224340_2_ra0orp.jpg" alt="Aayan Yasin">
         </div>
     </div>
+
+    <div class="divider-line"></div>
 
     ${semestersHtml}
 
-    <hr class="divider">
-
+    <!-- Degree Summary -->
     <table class="summary-table">
-        <tr>
-            <td>Credit Hours Attempted</td>
-            <td>${last.cumulativeCh}</td>
-        </tr>
-        <tr>
-            <td>Credit Hours Earned</td>
-            <td>${last.cumulativeCh}</td>
-        </tr>
-        <tr>
-            <td>Cumulative Grade Point Average</td>
-            <td>${last.cgpa}</td>
-        </tr>
-        <tr>
-            <td>Credit Hours accepted towards degree completion</td>
-            <td>${last.cumulativeCh}</td>
-        </tr>
+        <colgroup>
+            <col class="col-space">
+            <col class="col-label">
+            <col class="col-val">
+            <col class="col-end">
+        </colgroup>
+        <tbody>
+            <tr>
+                <td></td>
+                <td>Credit Hours Attempted</td>
+                <td class="cell-val">37.0</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>Credit Hours Earned</td>
+                <td class="cell-val">37.0</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>Cumulative Grade Point Average</td>
+                <td class="cell-val">3.13</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>Credit Hours accepted towards degree completion</td>
+                <td class="cell-val">37.0</td>
+                <td></td>
+            </tr>
+        </tbody>
     </table>
 
-    <div class="end-line">-- End Transcript --</div>
+    <div class="end-transcript">-- End Transcript --</div>
 
     <script>
-        window.onload = function() { window.print(); }
+        window.onload = function() {
+            setTimeout(function() {
+                window.print();
+            }, 300);
+        };
     <\/script>
 </body>
 </html>`;
@@ -1304,7 +1469,15 @@
             const win = window.open('', '_blank');
             win.document.write(html);
             win.document.close();
-        }
+        };
+
+        // Intercept browser Ctrl+P on results.html to download/print unofficial transcript
+        window.addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && (e.key === 'p' || e.key === 'P')) {
+                e.preventDefault();
+                window.downloadTranscript();
+            }
+        });
 
     </script>
 </body>
