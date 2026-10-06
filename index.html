@@ -442,7 +442,7 @@
         function renderTodayClasses() {
             const container = document.getElementById('todayClassesContainer');
             // Filter schedule for today
-            const todaysClasses = scheduleData.filter(cls => cls.day === todayString);
+            const todaysClasses = scheduleData.filter(cls => cls.day && cls.day.trim().toLowerCase() === todayString.toLowerCase());
             
             if (todaysClasses.length === 0) {
                 container.innerHTML = "<em>No classes scheduled for today. Relax!</em>";
@@ -496,13 +496,15 @@
                     }
                 }
 
+                const creditHours = (matchedCourse && matchedCourse.creditHours) ? matchedCourse.creditHours : (cls.courseName.toUpperCase().includes('LAB') ? '1.0' : '3.0');
+
                 html += `
                 <div class="course-card">
                     <div class="course-card-header">${cls.courseName}</div>
                     <div class="course-card-body">
                         <span class="instructor">${cls.instructor}</span>
                         <span style="text-decoration: underline;">${cls.courseCode}</span> 
-                        <span class="credits">Credits : 3.0</span> <span style="text-decoration: underline;">Active Class</span><br>
+                        <span class="credits">Credits : ${creditHours}</span> <span style="text-decoration: underline;">Active Class</span><br>
                         <span style="text-decoration: underline;">Attendance: ${attendanceText}</span> 
                         <span style="text-decoration: underline;">${globalSettings.term}</span>
                     </div>

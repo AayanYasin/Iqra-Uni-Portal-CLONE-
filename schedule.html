@@ -76,6 +76,7 @@
             flex: 0 0 auto; 
             width: 210px; 
             padding: 12px; 
+            background-color: #5b8296; 
             color: white; 
             font-size: 10px; 
             line-height: 1.5; 
@@ -90,6 +91,7 @@
         .bg-blue { background-color: #5b8296; }
         .bg-green { background-color: #9dbcae; }
         .bg-orange { background-color: #f0b067; }
+        .bg-purple { background-color: #3f3650; }
 
         .time { font-size: 11px; margin-bottom: 2px; font-weight: bold; }
         .instructor { text-transform: capitalize; }
@@ -422,6 +424,7 @@
                     <option value="bg-blue">Blue Theme</option>
                     <option value="bg-green">Green Theme</option>
                     <option value="bg-orange">Orange Theme</option>
+                    <option value="bg-purple">Purple Theme</option>
                 </select>
             </div>
 
@@ -501,14 +504,15 @@
 
                 let html = "";
                 daysOfWeek.forEach((day, index) => {
-                    let dayClasses = globalClassesData.filter(c => c.day === day);
+                    let dayClasses = globalClassesData.filter(c => c.day && c.day.trim().toLowerCase() === day.toLowerCase());
                     dayClasses.sort((a, b) => a.startTime.localeCompare(b.startTime));
 
                     let blocksHtml = "";
                     dayClasses.forEach(cls => {
                         let makeupTag = cls.isMakeup ? `<div class="makeup-tag">Makeup</div>` : '';
+                        let bgStyle = cls.color === 'bg-purple' ? 'style="background-color: #3f3650;"' : '';
                         blocksHtml += `
-                            <div class="class-block ${cls.color}">
+                            <div class="class-block ${cls.color}" ${bgStyle}>
                                 ${makeupTag}
                                 <div class="time">${cls.startTime} - ${cls.endTime}</div>
                                 <div class="instructor">${cls.instructor}</div>

@@ -487,21 +487,21 @@
             },
             {
                 termId: "IU04.SPRING-26",
-                gradePoints: "40.99",
-                cumulativeGp: "105.67",
+                gradePoints: "46.35",
+                cumulativeGp: "111.03",
                 attemptedCh: "15.0",
                 earnedCh: "15.0",
                 cumulativeCh: "33.0",
-                sgpa: "2.73",
+                sgpa: "3.09",
                 cgpa: "3.2",
                 courses: [
                     {
                         courseName: "ADVANCED PROGRAMMING",
                         creditHours: "2.0",
-                        gradePts: "4.66",
-                        finalGrade: "C+",
+                        gradePts: "6.0",
+                        finalGrade: "B",
                         assessments: [
-                            { type: "Class Participation", weightage: "35.0%", total: "35.0", obtained: "16.00", percentage: "45.71%" },
+                            { type: "Class Participation", weightage: "35.0%", total: "35.0", obtained: "25.00", percentage: "71.43%" },
                             { type: "Mid Term", weightage: "20.0%", total: "20.0", obtained: "15.00", percentage: "75.00%" },
                             { type: "Final Term", weightage: "45.0%", total: "45.0", obtained: "38.00", percentage: "84.44%" }
                         ]
@@ -520,12 +520,12 @@
                     {
                         courseName: "DISCRETE STRUCTURES",
                         creditHours: "3.0",
-                        gradePts: "6.99",
-                        finalGrade: "C+",
+                        gradePts: "9.00",
+                        finalGrade: "B",
                         assessments: [
-                            { type: "Mid Term", weightage: "20.0%", total: "20.0", obtained: "14.00", percentage: "70.00%" },
-                            { type: "Class Participation", weightage: "35.0%", total: "35.0", obtained: "25.00", percentage: "71.43%" },
-                            { type: "Final Term", weightage: "45.0%", total: "45.0", obtained: "26.00", percentage: "57.78%" }
+                            { type: "Mid Term", weightage: "20.0%", total: "20.0", obtained: "15.00", percentage: "75.00%" },
+                            { type: "Class Participation", weightage: "35.0%", total: "35.0", obtained: "27.00", percentage: "77.14%" },
+                            { type: "Final Term", weightage: "45.0%", total: "45.0", obtained: "32.00", percentage: "71.11%" }
                         ]
                     },
                     {
@@ -553,12 +553,46 @@
                     {
                         courseName: "MULTIVARIABLE CALCULUS",
                         creditHours: "3.0",
-                        gradePts: "6.99",
-                        finalGrade: "C+",
+                        gradePts: "9.00",
+                        finalGrade: "B",
                         assessments: [
-                            { type: "Class Participation", weightage: "35.0%", total: "35.0", obtained: "20.00", percentage: "57.14%" },
+                            { type: "Class Participation", weightage: "35.0%", total: "35.0", obtained: "26.00", percentage: "74.29%" },
                             { type: "Mid Term", weightage: "20.0%", total: "20.0", obtained: "20.00", percentage: "100.00%" },
-                            { type: "Final Term", weightage: "45.0%", total: "45.0", obtained: "27.00", percentage: "60.00%" }
+                            { type: "Final Term", weightage: "45.0%", total: "45.0", obtained: "32.00", percentage: "71.11%" }
+                        ]
+                    }
+                ]
+            },
+            {
+                termId: "IU04.SUMMER-26",
+                gradePoints: "12.33",
+                cumulativeGp: "123.36",
+                attemptedCh: "4.0",
+                earnedCh: "4.0",
+                cumulativeCh: "37.0",
+                sgpa: "3.08",
+                cgpa: "3.13",
+                courses: [
+                    {
+                        courseName: "DIGITAL LOGIC DESIGN (LAB)",
+                        creditHours: "1.0",
+                        gradePts: "3.33",
+                        finalGrade: "B+",
+                        assessments: [
+                            { type: "Final Term", weightage: "40.0%", total: "40.0", obtained: "36.00", percentage: "90.00%" },
+                            { type: "Class Participation", weightage: "35.0%", total: "35.0", obtained: "27.00", percentage: "77.14%" },
+                            { type: "Mid Term", weightage: "25.0%", total: "25.0", obtained: "18.00", percentage: "72.00%" }
+                        ]
+                    },
+                    {
+                        courseName: "PROBABILITY & STATISTICS",
+                        creditHours: "3.0",
+                        gradePts: "9.00",
+                        finalGrade: "B",
+                        assessments: [
+                            { type: "Final Term", weightage: "40.0%", total: "40.0", obtained: "28.00", percentage: "70.00%" },
+                            { type: "Class Participation", weightage: "35.0%", total: "35.0", obtained: "27.00", percentage: "77.14%" },
+                            { type: "Mid Term", weightage: "25.0%", total: "25.0", obtained: "20.00", percentage: "80.00%" }
                         ]
                     }
                 ]
@@ -594,13 +628,16 @@
                     });
                 }
 
-                // Sort terms by chronological date (SUMMER-25 then FALL-25)
+                // Sort terms chronologically (SUMMER-25, FALL-25, SPRING-26, SUMMER-26)
+                const termSeasonOrder = { "SPRING": 1, "SUMMER": 2, "FALL": 3, "WINTER": 4 };
                 loadedResults.sort((a, b) => {
-                    const yearA = parseInt(a.termId.split('-')[1]);
-                    const yearB = parseInt(b.termId.split('-')[1]);
-                    if (yearA !== yearB) return yearA - yearB;
-                    // Sort Summer before Fall
-                    return a.termId.includes("SUMMER") ? -1 : 1;
+                    const parseTerm = (id) => {
+                        const parts = id.split('.');
+                        const rest = parts[1] || parts[0];
+                        const [season, yr] = rest.split('-');
+                        return parseInt(yr) * 10 + (termSeasonOrder[season] || 0);
+                    };
+                    return parseTerm(a.termId) - parseTerm(b.termId);
                 });
 
                 let html = "";
@@ -734,38 +771,9 @@
                     }
                 });
 
-                // Auto Seed active courses if empty for current term
                 if (activeCourses.length === 0) {
-                    const seedActive = [
-                        {
-                            courseName: "TECHNOPRENEURSHIP",
-                            courseCode: "GER46203",
-                            term: currentTerm,
-                            creditHours: "2.0",
-                            attendanceRecords: []
-                        },
-                        {
-                            courseName: "MULTIVARIABLE CALCULUS",
-                            courseCode: "MTE111",
-                            term: currentTerm,
-                            creditHours: "3.0",
-                            attendanceRecords: []
-                        }
-                    ];
-                    
-                    for (const course of seedActive) {
-                        await addDoc(collection(db, "courses"), course);
-                    }
-                    
-                    // Refetch seeded active courses
-                    const refetchSnapshot = await getDocs(collection(db, "courses"));
-                    activeCourses = [];
-                    refetchSnapshot.forEach(docSnap => {
-                        const data = docSnap.data();
-                        if (data.term === currentTerm) {
-                            activeCourses.push({ id: docSnap.id, ...data });
-                        }
-                    });
+                    container.innerHTML = `<p style="text-align:center; padding:20px; color:#666; font-size:13px;">No active courses registered for this term.</p>`;
+                    return;
                 }
 
                 // Helper to get credit hours based on course name
@@ -812,7 +820,7 @@
 
         // 4. Fetch Global Settings for current term
         async function fetchGlobalSettingsAndActiveCourses() {
-            let currentTerm = "IU04.SPRING-26";
+            let currentTerm = "IU04.FALL-26";
             try {
                 const docSnap = await getDoc(doc(db, "settings", "global"));
                 if (docSnap.exists() && docSnap.data()) {
@@ -929,13 +937,13 @@
             }
 
             // Sort results chronologically (same logic as fetchStandingsAndRender)
+            const termSeasonOrder = { "SPRING": 1, "SUMMER": 2, "FALL": 3, "WINTER": 4 };
             const sorted = [...loadedResults].sort((a, b) => {
-                const seasons = { "SUMMER": 1, "FALL": 2, "SPRING": 3, "WINTER": 4 };
                 const parseT = (id) => {
                     const parts = id.split('.');
-                    const rest = parts[1]; // e.g. FALL-25
+                    const rest = parts[1] || parts[0]; // e.g. FALL-25
                     const [season, yr] = rest.split('-');
-                    return parseInt(yr) * 10 + (seasons[season] || 5);
+                    return parseInt(yr) * 10 + (termSeasonOrder[season] || 5);
                 };
                 return parseT(a.termId) - parseT(b.termId);
             });
@@ -959,7 +967,16 @@
                 "DISCRETE STRUCTURES": "GER132",
                 "OBJECT ORIENTED PROGRAMMING": "CMC112",
                 "DIGITAL LOGIC DESIGN": "CMC12201",
-                "MULTIVARIABLE CALCULUS": "MTE111"
+                "MULTIVARIABLE CALCULUS": "MTE111",
+                // SUMMER-26
+                "DIGITAL LOGIC DESIGN (LAB)": "CMC122-L",
+                "PROBABILITY & STATISTICS": "MTE212",
+                // FALL-26
+                "LINEAR ALGEBRA": "MTE213",
+                "THEORY OF AUTOMATA": "CSC252",
+                "OBJECT ORIENTED PROGRAMMING (LAB)": "CMC112-L",
+                "MACHINE LEARNING": "CSE383",
+                "EXPOSITORY WRITING": "GER122"
             };
 
             const today = new Date().toISOString().split('T')[0];
