@@ -48,6 +48,20 @@
             cursor: pointer;
         }
 
+        .desktop-brand-logo {
+            display: none;
+            align-items: center;
+            text-decoration: none;
+            margin-left: 5px;
+        }
+
+        .desktop-brand-logo img {
+            height: 32px;
+            width: auto;
+            display: block;
+            object-fit: contain;
+        }
+
         /* --- GRID MENU POPUP --- */
         .grid-container {
             position: relative;
@@ -858,6 +872,9 @@
 
         /* --- DESKTOP RESPONSIVE ADAPTATIONS --- */
         @media (min-width: 768px) {
+            .desktop-brand-logo {
+                display: inline-flex;
+            }
             .top-navbar {
                 padding: 10px 30px;
             }
@@ -1062,6 +1079,9 @@
                     </a>
                 </div>
             </div>
+            <a href="index.html" class="desktop-brand-logo">
+                <img src="logo_org.png" alt="Iqra University" onerror="this.onerror=null; this.src='https://app.iqra.edu.pk/odoocms_assets/static/6/logo_org.png';">
+            </a>
         </div>
         <div class="nav-right">
             <div class="notification" onclick="window.location.href='notifications.html'">
