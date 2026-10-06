@@ -726,6 +726,8 @@
         ];
 
         let loadedResults = [];
+        window.loadedResults = loadedResults;
+        window.seedResults = seedResults;
 
         // 1. Fetch academic standings and render collapsible layout
         async function fetchStandingsAndRender() {
@@ -753,6 +755,8 @@
                         loadedResults.push({ id: docSnap.id, ...docSnap.data() });
                     });
                 }
+
+                window.loadedResults = loadedResults;
 
                 // Sort terms chronologically (SUMMER-25, FALL-25, SPRING-26, SUMMER-26)
                 const termSeasonOrder = { "SPRING": 1, "SUMMER": 2, "FALL": 3, "WINTER": 4 };
@@ -1081,8 +1085,15 @@
 
         // Download Transcript - generates a pixel-perfect print page matching the official PDF using live database data
         window.downloadTranscript = function() {
-            // Source results directly from live database (loadedResults) with fallback to seedResults if still loading
-            const termsData = (loadedResults && loadedResults.length > 0) ? loadedResults : seedResults;
+            // Source results directly from live database (window.loadedResults) with fallback to window.seedResults
+            const termsData = (window.loadedResults && window.loadedResults.length > 0) 
+                ? window.loadedResults 
+                : (window.seedResults && window.seedResults.length > 0 ? window.seedResults : []);
+
+            if (!termsData || termsData.length === 0) {
+                alert("Results are still syncing from database. Please wait a moment and try again.");
+                return;
+            }
 
             // Sort results chronologically (SUMMER-25, FALL-25, SPRING-26, SUMMER-26, etc.)
             const termSeasonOrder = { "SPRING": 1, "SUMMER": 2, "FALL": 3, "WINTER": 4 };
