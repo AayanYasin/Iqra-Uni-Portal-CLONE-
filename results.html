@@ -1079,78 +1079,70 @@
             detailsRow.classList.toggle('show');
         }
 
-        // Download Transcript - generates a pixel-perfect print page matching the official PDF
+        // Download Transcript - generates a pixel-perfect print page matching the official PDF using live database data
         window.downloadTranscript = function() {
-            // Official terms data matching the official IU transcript record
-            const officialTerms = [
-                {
-                    termId: "IU04.SUMMER-25",
-                    attemptedCh: "6.0",
-                    sgpa: "3.39",
-                    cumulativeCh: "6.0",
-                    cgpa: "3.39",
-                    courses: [
-                        { code: "GER111-L", name: "APPLICATION OF INFORMATION & COMMUNICATION TECHNOLOGIES(LAB)", ch: "1.0", grade: "A" },
-                        { code: "GER111", name: "APPLICATION OF INFORMATION & COMMUNICATION TECHNOLOGIES", ch: "2.0", grade: "A-" },
-                        { code: "GER131", name: "CALCULUS AND ANALYTIC GEOMETRY", ch: "3.0", grade: "B" }
-                    ]
-                },
-                {
-                    termId: "IU04.FALL-25",
-                    attemptedCh: "12.0",
-                    sgpa: "3.70",
-                    cumulativeCh: "18.0",
-                    cgpa: "3.59",
-                    courses: [
-                        { code: "GER152", name: "APPLIED PHYSICS", ch: "2.0", grade: "A-" },
-                        { code: "GER152-L", name: "APPLIED PHYSICS (LAB)", ch: "1.0", grade: "A" },
-                        { code: "CMC111", name: "PROGRAMMING FUNDAMENTALS", ch: "3.0", grade: "A-" },
-                        { code: "CMC111-L", name: "PROGRAMMING FUNDAMENTALS (LAB)", ch: "1.0", grade: "A" },
-                        { code: "GER141", name: "ISLAMIC STUDIES", ch: "2.0", grade: "A" },
-                        { code: "GER121", name: "FUNCTIONAL ENGLISH", ch: "3.0", grade: "B+" }
-                    ]
-                },
-                {
-                    termId: "IU04.SPRING-26",
-                    attemptedCh: "15.0",
-                    sgpa: "2.73",
-                    cumulativeCh: "33.0",
-                    cgpa: "3.20",
-                    courses: [
-                        { code: "CSE419", name: "ADVANCED PROGRAMMING", ch: "2.0", grade: "C+" },
-                        { code: "GER46203", name: "TECHNOPRENEURSHIP", ch: "2.0", grade: "B" },
-                        { code: "GER132", name: "DISCRETE STRUCTURES", ch: "3.0", grade: "C+" },
-                        { code: "CMC112", name: "OBJECT ORIENTED PROGRAMMING", ch: "3.0", grade: "A-" },
-                        { code: "CMC12201", name: "DIGITAL LOGIC DESIGN", ch: "2.0", grade: "B-" },
-                        { code: "MTE111", name: "MULTIVARIABLE CALCULUS", ch: "3.0", grade: "C+" }
-                    ]
-                },
-                {
-                    termId: "IU04.SUMMER-26",
-                    attemptedCh: "4.0",
-                    sgpa: "2.58",
-                    cumulativeCh: "37.0",
-                    cgpa: "3.13",
-                    courses: [
-                        { code: "CMC122-L00", name: "DIGITAL LOGIC DESIGN (LAB)", ch: "1.0", grade: "B+" },
-                        { code: "MTE212", name: "PROBABILITY & STATISTICS", ch: "3.0", grade: "C+" }
-                    ]
-                }
-            ];
+            // Source results directly from live database (loadedResults) with fallback to seedResults if still loading
+            const termsData = (loadedResults && loadedResults.length > 0) ? loadedResults : seedResults;
+
+            // Sort results chronologically (SUMMER-25, FALL-25, SPRING-26, SUMMER-26, etc.)
+            const termSeasonOrder = { "SPRING": 1, "SUMMER": 2, "FALL": 3, "WINTER": 4 };
+            const sorted = [...termsData].sort((a, b) => {
+                const parseT = (id) => {
+                    const parts = (id || '').split('.');
+                    const rest = parts[1] || parts[0];
+                    const [season, yr] = rest.split('-');
+                    return parseInt(yr) * 10 + (termSeasonOrder[season] || 5);
+                };
+                return parseT(a.termId) - parseT(b.termId);
+            });
+
+            // Course code map matching official IU course codes
+            const codeMap = {
+                // SUMMER-25
+                "APPLICATION OF INFORMATION & COMMUNICATION TECHNOLOGIES(LAB)": "GER111-L",
+                "APPLICATION OF INFORMATION & COMMUNICATION TECHNOLOGIES": "GER111",
+                "CALCULUS AND ANALYTIC GEOMETRY": "GER131",
+                // FALL-25
+                "APPLIED PHYSICS": "GER152",
+                "APPLIED PHYSICS (LAB)": "GER152-L",
+                "PROGRAMMING FUNDAMENTALS": "CMC111",
+                "PROGRAMMING FUNDAMENTALS (LAB)": "CMC111-L",
+                "ISLAMIC STUDIES": "GER141",
+                "FUNCTIONAL ENGLISH": "GER121",
+                // SPRING-26
+                "ADVANCED PROGRAMMING": "CSE419",
+                "TECHNOPRENEURSHIP": "GER46203",
+                "DISCRETE STRUCTURES": "GER132",
+                "OBJECT ORIENTED PROGRAMMING": "CMC112",
+                "DIGITAL LOGIC DESIGN": "CMC12201",
+                "MULTIVARIABLE CALCULUS": "MTE111",
+                // SUMMER-26
+                "DIGITAL LOGIC DESIGN (LAB)": "CMC122-L00",
+                "PROBABILITY & STATISTICS": "MTE212",
+                // FALL-26
+                "LINEAR ALGEBRA": "MTE213",
+                "THEORY OF AUTOMATA": "CSC252",
+                "OBJECT ORIENTED PROGRAMMING (LAB)": "CMC112-L",
+                "MACHINE LEARNING": "CSE383",
+                "EXPOSITORY WRITING": "GER122"
+            };
 
             const today = new Date().toISOString().split('T')[0];
+            const regNo = document.getElementById('dropdownProfileId')?.textContent?.trim() || "IU04-0225-0926";
+            const studentName = document.getElementById('dropdownProfileName')?.textContent?.trim() || "Aayan Yasin";
 
             let semestersHtml = "";
             let semNum = 1;
-            officialTerms.forEach(term => {
+            sorted.forEach(term => {
                 let coursesRows = "";
-                term.courses.forEach(c => {
+                (term.courses || []).forEach(c => {
+                    const code = c.courseCode || codeMap[c.courseName] || "GEN100";
                     coursesRows += `
                     <tr class="course-row">
-                        <td class="cell-code">${c.code}</td>
-                        <td class="cell-title">${c.name}</td>
-                        <td class="cell-ch">${c.ch}</td>
-                        <td class="cell-grade">${c.grade}</td>
+                        <td class="cell-code">${code}</td>
+                        <td class="cell-title">${c.courseName}</td>
+                        <td class="cell-ch">${c.creditHours}</td>
+                        <td class="cell-grade">${c.finalGrade}</td>
                     </tr>`;
                 });
 
@@ -1189,6 +1181,13 @@
                 </div>`;
                 semNum++;
             });
+
+            // Cumulative degree summary from database
+            const lastTerm = sorted[sorted.length - 1] || {};
+            const attemptedCh = lastTerm.cumulativeCh || "37.0";
+            const earnedCh = lastTerm.cumulativeCh || "37.0";
+            const cgpa = lastTerm.cgpa || "3.13";
+            const acceptedCh = lastTerm.cumulativeCh || "37.0";
 
             const html = `<!DOCTYPE html>
 <html lang="en">
@@ -1390,11 +1389,11 @@
         <div class="student-fields">
             <div class="field-col">
                 <span class="field-label">Registration No</span>
-                <span class="field-value">IU04-0225-0926</span>
+                <span class="field-value">${regNo}</span>
             </div>
             <div class="field-col">
                 <span class="field-label">Name</span>
-                <span class="field-value">Aayan Yasin</span>
+                <span class="field-value">${studentName}</span>
             </div>
             <div class="field-col">
                 <span class="field-label">DOB</span>
@@ -1410,7 +1409,7 @@
             </div>
         </div>
         <div class="photo-frame">
-            <img src="https://res.cloudinary.com/dftplaxsk/image/upload/v1776757086/1757164224340_2_ra0orp.jpg" alt="Aayan Yasin">
+            <img src="https://res.cloudinary.com/dftplaxsk/image/upload/v1776757086/1757164224340_2_ra0orp.jpg" alt="${studentName}">
         </div>
     </div>
 
@@ -1430,25 +1429,25 @@
             <tr>
                 <td></td>
                 <td>Credit Hours Attempted</td>
-                <td class="cell-val">37.0</td>
+                <td class="cell-val">${attemptedCh}</td>
                 <td></td>
             </tr>
             <tr>
                 <td></td>
                 <td>Credit Hours Earned</td>
-                <td class="cell-val">37.0</td>
+                <td class="cell-val">${earnedCh}</td>
                 <td></td>
             </tr>
             <tr>
                 <td></td>
                 <td>Cumulative Grade Point Average</td>
-                <td class="cell-val">3.13</td>
+                <td class="cell-val">${cgpa}</td>
                 <td></td>
             </tr>
             <tr>
                 <td></td>
                 <td>Credit Hours accepted towards degree completion</td>
-                <td class="cell-val">37.0</td>
+                <td class="cell-val">${acceptedCh}</td>
                 <td></td>
             </tr>
         </tbody>
