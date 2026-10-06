@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,172 +8,586 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         /* General Reset and Body Styles */
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
-        body { background-color: #f4f6f9; color: #333; overflow-x: hidden; width: 100%; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f4f6f9;
+            color: #333;
+            overflow-x: hidden;
+            width: 100%;
+        }
 
         /* --- TOP NAVBAR --- */
-        .top-navbar { background-color: #0b3d68; color: white; display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; height: 55px; position: sticky; top: 0; z-index: 100; width: 100%; }
-        .nav-left { display: flex; align-items: center; gap: 15px; font-size: 20px; }
-        .nav-left i { cursor: pointer; }
-        .nav-right { display: flex; align-items: center; gap: 15px; }
-        .notification { position: relative; font-size: 20px; }
-        .badge { position: absolute; top: -5px; right: -8px; background-color: #e74c3c; color: white; font-size: 10px; border-radius: 50%; padding: 2px 5px; }
-        
-        .profile-pic { width: 35px; height: 35px; background-color: #ccc; border-radius: 50%; border: 2px solid white; overflow: hidden; cursor: pointer; user-select: none; -webkit-user-select: none; flex-shrink: 0;}
-        .profile-pic img { width: 100%; height: 100%; object-fit: cover; pointer-events: none;}
+        .top-navbar {
+            background-color: #0b3d68;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 15px;
+            height: 55px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            width: 100%;
+        }
+
+        .nav-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 20px;
+        }
+
+        .nav-left i {
+            cursor: pointer;
+        }
+
+        /* --- GRID MENU POPUP --- */
+        .grid-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        #gridBtn {
+            cursor: pointer;
+            font-size: 20px;
+            color: white;
+            padding: 2px 4px;
+            display: inline-block;
+        }
+
+        .grid-dropdown {
+            position: absolute;
+            top: 38px;
+            left: -12px;
+            width: 165px;
+            background: #ffffff;
+            box-shadow: 2px 4px 14px rgba(0, 0, 0, 0.18);
+            border: 1px solid #dcdcdc;
+            border-top: none;
+            padding: 22px 10px;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            z-index: 1000;
+        }
+
+        .grid-dropdown.show {
+            display: flex;
+        }
+
+        .grid-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            gap: 6px;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .grid-item:hover {
+            opacity: 0.85;
+        }
+
+        .grid-item i {
+            font-size: 26px;
+            color: #0b3d68;
+            line-height: 1;
+        }
+
+        .grid-item .attendance-icon {
+            display: block;
+        }
+
+        .grid-item span {
+            font-size: 13.5px;
+            color: #0b3d68;
+            text-decoration: underline;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .notification {
+            position: relative;
+            font-size: 20px;
+        }
+
+        .badge {
+            position: absolute;
+            top: -5px;
+            right: -8px;
+            background-color: #e74c3c;
+            color: white;
+            font-size: 10px;
+            border-radius: 50%;
+            padding: 2px 5px;
+        }
+
+        .profile-pic {
+            width: 35px;
+            height: 35px;
+            background-color: #ccc;
+            border-radius: 50%;
+            border: 2px solid white;
+            overflow: hidden;
+            cursor: pointer;
+            user-select: none;
+            -webkit-user-select: none;
+            flex-shrink: 0;
+        }
+
+        .profile-pic img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            pointer-events: none;
+        }
 
         /* --- SIDEBAR OVERLAY & STYLES --- */
-        .sidebar-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 999; opacity: 0; visibility: hidden; transition: opacity 0.3s; }
-        .sidebar-overlay.active { opacity: 1; visibility: visible; }
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s;
+        }
 
-        .sidebar { position: fixed; top: 0; left: -320px; width: 280px; max-width: 80vw; height: 100%; background-color: #0b3d68; z-index: 1000; transition: left 0.3s ease; display: flex; flex-direction: column; box-shadow: 2px 0 5px rgba(0,0,0,0.2); }
-        .sidebar.active { left: 0; }
-        .sidebar-header { padding: 40px 20px 20px 20px; display: flex; flex-direction: column; align-items: center; color: white; }
-        .sidebar-profile-pic { width: 80px; height: 80px; border-radius: 50%; border: 2px solid white; overflow: hidden; margin-bottom: 10px; }
-        .sidebar-profile-pic img { width: 100%; height: 100%; object-fit: cover; }
-        .sidebar-name { font-size: 16px; font-weight: bold; text-align: center; }
-        
-        .sidebar-menu-container { background-color: white; flex-grow: 1; border-top-left-radius: 15px; border-top-right-radius: 15px; padding-top: 15px; padding-bottom: 20px; overflow-y: auto; }
-        .menu-item { display: flex; align-items: center; padding: 14px 20px; color: #1a2a40; text-decoration: none; font-size: 15px; }
-        .menu-item:hover { background-color: #f5f5f5; }
-        .menu-item i.icon { width: 35px; font-size: 18px; color: #122b46; }
-        .menu-item .text { flex-grow: 1; }
-        .menu-item i.arrow { font-size: 12px; color: #666; }
-        .menu-item.active { color: #902b2b; }
-        .menu-item.active i.icon { color: #902b2b; }
+        .sidebar-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: -320px;
+            width: 280px;
+            max-width: 80vw;
+            height: 100%;
+            background-color: #0b3d68;
+            z-index: 1000;
+            transition: left 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .sidebar.active {
+            left: 0;
+        }
+
+        .sidebar-header {
+            padding: 40px 20px 20px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: white;
+        }
+
+        .sidebar-profile-pic {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 2px solid white;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .sidebar-profile-pic img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .sidebar-name {
+            font-size: 16px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .sidebar-menu-container {
+            background-color: white;
+            flex-grow: 1;
+            border-top-left-radius: 15px;
+            border-top-right-radius: 15px;
+            padding-top: 15px;
+            padding-bottom: 20px;
+            overflow-y: auto;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            padding: 14px 20px;
+            color: #1a2a40;
+            text-decoration: none;
+            font-size: 15px;
+        }
+
+        .menu-item:hover {
+            background-color: #f5f5f5;
+        }
+
+        .menu-item i.icon {
+            width: 35px;
+            font-size: 18px;
+            color: #122b46;
+        }
+
+        .menu-item .text {
+            flex-grow: 1;
+        }
+
+        .menu-item i.arrow {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .menu-item.active {
+            color: #902b2b;
+        }
+
+        .menu-item.active i.icon {
+            color: #902b2b;
+        }
 
         /* --- BREADCRUMB --- */
-        .breadcrumb { background-color: white; padding: 12px 15px; display: flex; align-items: center; gap: 10px; color: #0b3d68; font-size: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); width: 100%; flex-wrap: wrap;}
-        .breadcrumb i.fa-home { font-size: 16px; }
-        .breadcrumb i.fa-chevron-right { font-size: 12px; color: #666; }
+        .breadcrumb {
+            background-color: white;
+            padding: 12px 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #0b3d68;
+            font-size: 14px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            width: 100%;
+            flex-wrap: wrap;
+        }
+
+        .breadcrumb i.fa-home {
+            font-size: 16px;
+        }
+
+        .breadcrumb i.fa-chevron-right {
+            font-size: 12px;
+            color: #666;
+        }
 
         /* --- MAIN CONTAINER --- */
-        .container { padding: 15px; max-width: 600px; margin: 0 auto; width: 100%; }
+        .container {
+            padding: 15px;
+            max-width: 600px;
+            margin: 0 auto;
+            width: 100%;
+        }
 
         /* --- PROFILE CARD STYLING --- */
-        .profile-card { background: white; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow: hidden; margin-bottom: 25px; position: relative; }
-        
+        .profile-card {
+            background: white;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            margin-bottom: 25px;
+            position: relative;
+        }
+
         /* Navy Blue Banner Header */
-        .profile-blue-header { background-color: #0b3d68; color: white; padding: 35px 20px 40px 20px; text-align: center; display: flex; flex-direction: column; align-items: center; position: relative;}
-        
-        .header-avatar-container { width: 105px; height: 105px; border-radius: 50%; border: 3px solid white; overflow: hidden; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-        .header-avatar-container img { width: 100%; height: 100%; object-fit: cover; }
-        
-        .header-name { font-size: 18px; font-weight: bold; margin-bottom: 4px; letter-spacing: 0.5px; }
-        .header-id { font-size: 13px; opacity: 0.9; margin-bottom: 4px; }
-        .header-faculty { font-size: 13px; opacity: 0.9; margin-bottom: 18px; line-height: 1.4; max-width: 90%; }
-        
-        .header-meta-block { margin-top: 15px; }
-        .meta-val { font-size: 16px; font-weight: bold; margin-bottom: 2px; }
-        .meta-lbl { font-size: 11px; opacity: 0.7; margin-bottom: 14px; text-transform: capitalize; }
-        
+        .profile-blue-header {
+            background-color: #0b3d68;
+            color: white;
+            padding: 35px 20px 40px 20px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+
+        .header-avatar-container {
+            width: 105px;
+            height: 105px;
+            border-radius: 50%;
+            border: 3px solid white;
+            overflow: hidden;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .header-avatar-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .header-name {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 4px;
+            letter-spacing: 0.5px;
+        }
+
+        .header-id {
+            font-size: 13px;
+            opacity: 0.9;
+            margin-bottom: 4px;
+        }
+
+        .header-faculty {
+            font-size: 13px;
+            opacity: 0.9;
+            margin-bottom: 18px;
+            line-height: 1.4;
+            max-width: 90%;
+        }
+
+        .header-meta-block {
+            margin-top: 15px;
+        }
+
+        .meta-val {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 2px;
+        }
+
+        .meta-lbl {
+            font-size: 11px;
+            opacity: 0.7;
+            margin-bottom: 14px;
+            text-transform: capitalize;
+        }
+
         /* Floating Action Button (FAB) */
-        .fab-edit-btn { 
-            position: absolute; 
-            bottom: -22px; 
-            right: 25px; 
-            width: 45px; 
-            height: 45px; 
-            border-radius: 50%; 
-            background-color: #902b2b; 
-            color: white; 
-            border: none; 
-            outline: none; 
-            cursor: pointer; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            font-size: 16px; 
-            box-shadow: 0 4px 8px rgba(0,0,0,0.25); 
-            z-index: 10; 
+        .fab-edit-btn {
+            position: absolute;
+            bottom: -22px;
+            right: 25px;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background-color: #902b2b;
+            color: white;
+            border: none;
+            outline: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25);
+            z-index: 10;
             transition: background-color 0.2s, transform 0.2s;
         }
-        .fab-edit-btn:hover { background-color: #722020; transform: scale(1.05); }
-        .fab-edit-btn:active { transform: scale(0.95); }
+
+        .fab-edit-btn:hover {
+            background-color: #722020;
+            transform: scale(1.05);
+        }
+
+        .fab-edit-btn:active {
+            transform: scale(0.95);
+        }
 
         /* Tab Navigation Bar */
-        .profile-tabs { display: flex; border-bottom: 1px solid #e5e7eb; background: #fff; padding-top: 15px; }
-        .profile-tab { 
-            flex: 1; 
-            text-align: center; 
-            padding: 14px 0; 
-            font-size: 12px; 
-            font-weight: bold; 
-            color: #637381; 
-            cursor: pointer; 
-            border-bottom: 3px solid transparent; 
+        .profile-tabs {
+            display: flex;
+            border-bottom: 1px solid #e5e7eb;
+            background: #fff;
+            padding-top: 15px;
+        }
+
+        .profile-tab {
+            flex: 1;
+            text-align: center;
+            padding: 14px 0;
+            font-size: 12px;
+            font-weight: bold;
+            color: #637381;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
             transition: all 0.2s ease;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
-        .profile-tab.active { 
-            color: #0b3d68; 
-            border-bottom: 3px solid #0b3d68; 
+
+        .profile-tab.active {
+            color: #0b3d68;
+            border-bottom: 3px solid #0b3d68;
         }
-        
+
         /* Tab Content Panel */
-        .tab-panel { display: none; padding: 25px 20px; }
-        .tab-panel.active { display: block; }
-        
+        .tab-panel {
+            display: none;
+            padding: 25px 20px;
+        }
+
+        .tab-panel.active {
+            display: block;
+        }
+
         /* Detail Section styling */
-        .detail-section-title { font-size: 15px; font-weight: bold; color: #122b46; margin-bottom: 15px; }
-        .detail-section-title:not(:first-child) { margin-top: 25px; }
-        
-        .detail-row { display: flex; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid #f3f4f6; gap: 15px; }
-        .detail-row:last-child { border-bottom: none; }
-        
-        .detail-icon-box { 
-            width: 32px; 
-            height: 32px; 
-            border-radius: 50%; 
-            background-color: #f4f6f9; 
-            color: #0b3d68; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            font-size: 14px; 
+        .detail-section-title {
+            font-size: 15px;
+            font-weight: bold;
+            color: #122b46;
+            margin-bottom: 15px;
+        }
+
+        .detail-section-title:not(:first-child) {
+            margin-top: 25px;
+        }
+
+        .detail-row {
+            display: flex;
+            align-items: flex-start;
+            padding: 12px 0;
+            border-bottom: 1px solid #f3f4f6;
+            gap: 15px;
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .detail-icon-box {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: #f4f6f9;
+            color: #0b3d68;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
             flex-shrink: 0;
         }
-        
-        .detail-text-box { flex-grow: 1; display: flex; flex-direction: column; gap: 2px; }
-        .detail-val { font-size: 13px; font-weight: bold; color: #111; word-break: break-word; }
-        .detail-lbl { font-size: 11px; color: #888; text-transform: capitalize; }
-        
+
+        .detail-text-box {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .detail-val {
+            font-size: 13px;
+            font-weight: bold;
+            color: #111;
+            word-break: break-word;
+        }
+
+        .detail-lbl {
+            font-size: 11px;
+            color: #888;
+            text-transform: capitalize;
+        }
+
         /* Study Track specific simplicity */
-        .study-track-panel .detail-row { border-bottom: none; padding: 8px 0 16px 0; flex-direction: column; gap: 4px; }
-        .study-track-panel .detail-val { font-size: 14px; font-weight: normal; color: #222; }
-        .study-track-panel .detail-lbl { font-size: 11px; color: #888; font-weight: bold; }
-        
+        .study-track-panel .detail-row {
+            border-bottom: none;
+            padding: 8px 0 16px 0;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .study-track-panel .detail-val {
+            font-size: 14px;
+            font-weight: normal;
+            color: #222;
+        }
+
+        .study-track-panel .detail-lbl {
+            font-size: 11px;
+            color: #888;
+            font-weight: bold;
+        }
+
         /* --- NOTIFICATIONS SECTION --- */
-        .notifications-header { font-size: 18px; font-weight: bold; color: #122b46; margin-bottom: 15px; margin-top: 10px; }
-        
-        .survey-card { 
-            background: white; 
-            border-radius: 6px; 
-            box-shadow: 0 2px 6px rgba(0,0,0,0.06); 
-            padding: 20px 15px; 
-            margin-bottom: 20px; 
-            border: 1px solid #f0f0f0; 
+        .notifications-header {
+            font-size: 18px;
+            font-weight: bold;
+            color: #122b46;
+            margin-bottom: 15px;
+            margin-top: 10px;
+        }
+
+        .survey-card {
+            background: white;
+            border-radius: 6px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+            padding: 20px 15px;
+            margin-bottom: 20px;
+            border: 1px solid #f0f0f0;
             position: relative;
         }
-        .survey-card-actions { position: absolute; top: 18px; right: 15px; color: #888; cursor: pointer; font-size: 16px;}
-        .survey-title { font-size: 13px; font-weight: bold; color: #111; margin-bottom: 10px; max-width: 90%; }
-        .survey-banner-txt { font-size: 11px; font-weight: bold; color: #000; margin-bottom: 8px; font-family: sans-serif; }
-        .survey-desc { font-size: 10px; color: #555; line-height: 1.5; font-family: sans-serif; }
-        
-        .notification-banner-box { 
-            background: white; 
-            border-radius: 6px; 
-            box-shadow: 0 2px 6px rgba(0,0,0,0.06); 
-            border: 1px solid #f0f0f0; 
-            padding: 15px; 
+
+        .survey-card-actions {
+            position: absolute;
+            top: 18px;
+            right: 15px;
+            color: #888;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .survey-title {
+            font-size: 13px;
+            font-weight: bold;
+            color: #111;
+            margin-bottom: 10px;
+            max-width: 90%;
+        }
+
+        .survey-banner-txt {
+            font-size: 11px;
+            font-weight: bold;
+            color: #000;
+            margin-bottom: 8px;
+            font-family: sans-serif;
+        }
+
+        .survey-desc {
+            font-size: 10px;
+            color: #555;
+            line-height: 1.5;
+            font-family: sans-serif;
+        }
+
+        .notification-banner-box {
+            background: white;
+            border-radius: 6px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+            border: 1px solid #f0f0f0;
+            padding: 15px;
             text-align: center;
             display: flex;
             flex-direction: column;
             align-items: center;
             margin-bottom: 25px;
         }
-        
+
         .banner-img-placeholder {
             width: 100%;
             padding: 25px 0;
@@ -188,38 +603,151 @@
             gap: 10px;
             margin-bottom: 15px;
         }
-        
-        .banner-img-placeholder i { font-size: 20px; color: #2ecc71; }
-        
-        .banner-link { font-size: 13px; font-weight: bold; color: #0b3d68; text-transform: uppercase; text-decoration: none; cursor: pointer; }
-        .banner-link:hover { text-decoration: underline; }
+
+        .banner-img-placeholder i {
+            font-size: 20px;
+            color: #2ecc71;
+        }
+
+        .banner-link {
+            font-size: 13px;
+            font-weight: bold;
+            color: #0b3d68;
+            text-transform: uppercase;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .banner-link:hover {
+            text-decoration: underline;
+        }
 
         /* --- MODAL STYLES --- */
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; justify-content: center; align-items: center; padding: 15px; }
-        .modal-content { background: white; padding: 20px; border-radius: 8px; width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; }
-        .modal-content h2 { margin-bottom: 15px; color: #0b3d68; font-size: 18px; text-align: center; }
-        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            width: 100%;
+            max-width: 480px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-content h2 {
+            margin-bottom: 15px;
+            color: #0b3d68;
+            font-size: 18px;
+            text-align: center;
+        }
+
         /* Tab switcher inside Modal */
-        .modal-tab-headers { display: flex; border-bottom: 1px solid #eee; margin-bottom: 15px; }
-        .modal-tab-btn { flex: 1; text-align: center; padding: 10px 0; font-size: 11px; font-weight: bold; color: #888; border-bottom: 2px solid transparent; cursor: pointer; }
-        .modal-tab-btn.active { color: #0b3d68; border-bottom: 2px solid #0b3d68; }
-        
-        .modal-tab-panel { display: none; }
-        .modal-tab-panel.active { display: block; }
-        
-        .form-section-header { font-size: 12px; font-weight: bold; color: #0b3d68; text-transform: uppercase; margin: 15px 0 8px 0; border-bottom: 1px solid #eee; padding-bottom: 4px; }
-        
-        .form-group { margin-bottom: 12px; }
-        .form-group label { display: block; margin-bottom: 4px; font-size: 11px; color: #333; font-weight: bold; }
-        .form-group input, .form-group select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; }
-        
-        .modal-buttons { display: flex; justify-content: flex-end; gap: 10px; margin-top: 25px; }
-        .btn { padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: bold; }
-        .btn-cancel { background: #e0e0e0; color: #333; }
-        .btn-save { background: #0b3d68; color: white; }
+        .modal-tab-headers {
+            display: flex;
+            border-bottom: 1px solid #eee;
+            margin-bottom: 15px;
+        }
+
+        .modal-tab-btn {
+            flex: 1;
+            text-align: center;
+            padding: 10px 0;
+            font-size: 11px;
+            font-weight: bold;
+            color: #888;
+            border-bottom: 2px solid transparent;
+            cursor: pointer;
+        }
+
+        .modal-tab-btn.active {
+            color: #0b3d68;
+            border-bottom: 2px solid #0b3d68;
+        }
+
+        .modal-tab-panel {
+            display: none;
+        }
+
+        .modal-tab-panel.active {
+            display: block;
+        }
+
+        .form-section-header {
+            font-size: 12px;
+            font-weight: bold;
+            color: #0b3d68;
+            text-transform: uppercase;
+            margin: 15px 0 8px 0;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 4px;
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 4px;
+            font-size: 11px;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 25px;
+        }
+
+        .btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        .btn-cancel {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        .btn-save {
+            background: #0b3d68;
+            color: white;
+        }
 
         /* --- PROFILE DROPDOWN --- */
-        .profile-container { position: relative; display: inline-block; }
+        .profile-container {
+            position: relative;
+            display: inline-block;
+        }
+
         .profile-dropdown {
             position: absolute;
             top: 45px;
@@ -238,7 +766,13 @@
             transform: translateY(-10px);
             transition: transform 0.2s ease, opacity 0.2s ease;
         }
-        .profile-dropdown.show { display: flex; opacity: 1; transform: translateY(0); }
+
+        .profile-dropdown.show {
+            display: flex;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
         .dropdown-header {
             padding: 15px;
             background: linear-gradient(135deg, #0b3d68 0%, #1a2a40 100%);
@@ -248,10 +782,33 @@
             align-items: center;
             text-align: center;
         }
-        .dropdown-avatar { width: 50px; height: 50px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, 0.8); margin-bottom: 8px; object-fit: cover; }
-        .dropdown-name { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
-        .dropdown-id { font-size: 11px; opacity: 0.8; }
-        .dropdown-menu-list { display: flex; flex-direction: column; padding: 8px 0; }
+
+        .dropdown-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            margin-bottom: 8px;
+            object-fit: cover;
+        }
+
+        .dropdown-name {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .dropdown-id {
+            font-size: 11px;
+            opacity: 0.8;
+        }
+
+        .dropdown-menu-list {
+            display: flex;
+            flex-direction: column;
+            padding: 8px 0;
+        }
+
         .dropdown-item {
             display: flex;
             align-items: center;
@@ -267,15 +824,40 @@
             cursor: pointer;
             width: 100%;
         }
-        .dropdown-item:hover { background: #f4f6f9; color: #0b3d68; }
-        .dropdown-item i { font-size: 15px; color: #666; transition: color 0.2s; }
-        .dropdown-item:hover i { color: #0b3d68; }
-        .dropdown-item.logout { border-top: 1px solid #eee; color: #e74c3c; margin-top: 5px; padding-top: 15px; }
-        .dropdown-item.logout:hover { background: #fdf2f2; color: #c0392b; }
-        .dropdown-item.logout:hover i { color: #c0392b; }
 
+        .dropdown-item:hover {
+            background: #f4f6f9;
+            color: #0b3d68;
+        }
+
+        .dropdown-item i {
+            font-size: 15px;
+            color: #666;
+            transition: color 0.2s;
+        }
+
+        .dropdown-item:hover i {
+            color: #0b3d68;
+        }
+
+        .dropdown-item.logout {
+            border-top: 1px solid #eee;
+            color: #e74c3c;
+            margin-top: 5px;
+            padding-top: 15px;
+        }
+
+        .dropdown-item.logout:hover {
+            background: #fdf2f2;
+            color: #c0392b;
+        }
+
+        .dropdown-item.logout:hover i {
+            color: #c0392b;
+        }
     </style>
 </head>
+
 <body>
 
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
@@ -283,39 +865,81 @@
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <div class="sidebar-profile-pic">
-                <img src="https://res.cloudinary.com/dftplaxsk/image/upload/v1776757086/1757164224340_2_ra0orp.jpg" alt="Profile" id="sidebarProfilePic">
+                <img src="https://res.cloudinary.com/dftplaxsk/image/upload/v1776757086/1757164224340_2_ra0orp.jpg"
+                    alt="Profile" id="sidebarProfilePic">
             </div>
             <div class="sidebar-name" id="sidebarProfileName">Aayan Yasin</div>
         </div>
         <div class="sidebar-menu-container">
-            <a href="index.html" class="menu-item"><i class="fa-solid fa-border-all icon"></i><span class="text">Dashboard</span></a>
-            <a href="profile.html" class="menu-item active"><i class="fa-solid fa-user icon"></i><span class="text">Profile</span></a>
-            <a href="attendance.html" class="menu-item"><i class="fa-solid fa-file-signature icon"></i><span class="text">Attendance</span></a>
-            <a href="results.html" class="menu-item"><i class="fa-solid fa-chart-simple icon"></i><span class="text">Results & Exams</span><i class="fa-solid fa-chevron-down arrow"></i></a>
-            <a href="datesheet.html" class="menu-item"><i class="fa-solid fa-chart-column icon"></i><span class="text">Exam Datesheet</span></a>
-            <a href="notifications.html" class="menu-item"><i class="fa-solid fa-bell icon"></i><span class="text">Notifications</span></a>
-            <a href="404.html?page=Enrollments" class="menu-item"><i class="fa-solid fa-briefcase icon"></i><span class="text">Enrollments</span></a>
+            <a href="index.html" class="menu-item"><i class="fa-solid fa-border-all icon"></i><span
+                    class="text">Dashboard</span></a>
+            <a href="profile.html" class="menu-item active"><i class="fa-solid fa-user icon"></i><span
+                    class="text">Profile</span></a>
+            <a href="attendance.html" class="menu-item"><i class="fa-solid fa-file-signature icon"></i><span
+                    class="text">Attendance</span></a>
+            <a href="results.html" class="menu-item"><i class="fa-solid fa-chart-simple icon"></i><span
+                    class="text">Results & Exams</span><i class="fa-solid fa-chevron-down arrow"></i></a>
+            <a href="datesheet.html" class="menu-item"><i class="fa-solid fa-chart-column icon"></i><span
+                    class="text">Exam Datesheet</span></a>
+            <a href="notifications.html" class="menu-item"><i class="fa-solid fa-bell icon"></i><span
+                    class="text">Notifications</span></a>
+            <a href="404.html?page=Enrollments" class="menu-item"><i class="fa-solid fa-briefcase icon"></i><span
+                    class="text">Enrollments</span></a>
             <div>
-                <div class="menu-item" onclick="const sub = document.getElementById('feedbackSub'); const arrow = this.querySelector('.arrow'); if(sub.style.display === 'block') { sub.style.display = 'none'; arrow.style.transform = 'rotate(0deg)'; } else { sub.style.display = 'block'; arrow.style.transform = 'rotate(180deg)'; }" style="cursor: pointer; display: flex; align-items: center;">
+                <div class="menu-item"
+                    onclick="const sub = document.getElementById('feedbackSub'); const arrow = this.querySelector('.arrow'); if(sub.style.display === 'block') { sub.style.display = 'none'; arrow.style.transform = 'rotate(0deg)'; } else { sub.style.display = 'block'; arrow.style.transform = 'rotate(180deg)'; }"
+                    style="cursor: pointer; display: flex; align-items: center;">
                     <i class="fa-solid fa-message icon"></i>
                     <span class="text">Feedback</span>
-                    <i class="fa-solid fa-chevron-down arrow" style="transition: transform 0.2s; font-size: 12px; color: #666; margin-left: auto;"></i>
+                    <i class="fa-solid fa-chevron-down arrow"
+                        style="transition: transform 0.2s; font-size: 12px; color: #666; margin-left: auto;"></i>
                 </div>
                 <div id="feedbackSub" style="display: none; background-color: #f4f6f9; border-left: 3px solid #902b2b;">
-                    <a href="404.html?page=QA-Feedback" class="menu-item" style="padding-left: 40px; font-size: 14px;"><i class="fa-solid fa-comments icon" style="width: 30px; font-size: 15px; color: #122b46;"></i><span class="text">QA Feedback</span></a>
+                    <a href="404.html?page=QA-Feedback" class="menu-item"
+                        style="padding-left: 40px; font-size: 14px;"><i class="fa-solid fa-comments icon"
+                            style="width: 30px; font-size: 15px; color: #122b46;"></i><span class="text">QA
+                            Feedback</span></a>
                 </div>
             </div>
-            <a href="schedule.html" class="menu-item"><i class="fa-regular fa-calendar-days icon"></i><span class="text">Time Table</span></a>
-            <a href="invoices.html" class="menu-item"><i class="fa-solid fa-file-invoice-dollar icon"></i><span class="text">Invoices</span></a>
-            <a href="404.html?page=MsThesis" class="menu-item"><i class="fa-solid fa-briefcase icon"></i><span class="text">MS Thesis</span></a>
-            <a href="complaints.html" class="menu-item"><i class="fa-solid fa-door-open icon"></i><span class="text">Complaints</span></a>
+            <a href="schedule.html" class="menu-item"><i class="fa-regular fa-calendar-days icon"></i><span
+                    class="text">Time Table</span></a>
+            <a href="invoices.html" class="menu-item"><i class="fa-solid fa-file-invoice-dollar icon"></i><span
+                    class="text">Invoices</span></a>
+            <a href="404.html?page=MsThesis" class="menu-item"><i class="fa-solid fa-briefcase icon"></i><span
+                    class="text">MS Thesis</span></a>
+            <a href="complaints.html" class="menu-item"><i class="fa-solid fa-door-open icon"></i><span
+                    class="text">Complaints</span></a>
         </div>
     </div>
 
     <div class="top-navbar">
         <div class="nav-left">
             <i class="fa-solid fa-bars" id="menuBtn"></i>
-            <i class="fa-solid fa-grip"></i>
+            <div class="grid-container">
+                <i class="fa-solid fa-grip" id="gridBtn"></i>
+                <div class="grid-dropdown" id="gridDropdown">
+                    <a href="notifications.html" class="grid-item">
+                        <i class="fa-solid fa-bell"></i>
+                        <span>Notifications</span>
+                    </a>
+                    <a href="datesheet.html" class="grid-item">
+                        <i class="fa-regular fa-calendar"></i>
+                        <span>DateSheet</span>
+                    </a>
+                    <a href="results.html" class="grid-item">
+                        <i class="fa-solid fa-book-open"></i>
+                        <span>Enrolled Courses</span>
+                    </a>
+                    <a href="attendance.html" class="grid-item">
+                        <svg class="attendance-icon" width="28" height="28" viewBox="0 0 30 30" fill="none">
+                            <path d="M5 22L13.5 4.5L22 22" stroke="#0b3d68" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" />
+                            <path d="M8.5 15.5H18.5" stroke="#0b3d68" stroke-width="2.6" stroke-linecap="round" />
+                            <path d="M13.5 20L17.5 24.5L25.5 14.5" stroke="#0b3d68" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                        <span>Attendance</span>
+                    </a>
+                </div>
+            </div>
         </div>
         <div class="nav-right">
             <div class="notification" onclick="window.location.href='notifications.html'">
@@ -323,11 +947,13 @@
             </div>
             <div class="profile-container">
                 <div class="profile-pic" id="topProfilePic">
-                    <img src="https://res.cloudinary.com/dftplaxsk/image/upload/v1776757086/1757164224340_2_ra0orp.jpg" alt="Profile" id="navbarProfilePic">
+                    <img src="https://res.cloudinary.com/dftplaxsk/image/upload/v1776757086/1757164224340_2_ra0orp.jpg"
+                        alt="Profile" id="navbarProfilePic">
                 </div>
                 <div class="profile-dropdown" id="profileDropdown">
                     <div class="dropdown-header">
-                        <img src="https://res.cloudinary.com/dftplaxsk/image/upload/v1776757086/1757164224340_2_ra0orp.jpg" class="dropdown-avatar" alt="Profile" id="dropdownProfilePic">
+                        <img src="https://res.cloudinary.com/dftplaxsk/image/upload/v1776757086/1757164224340_2_ra0orp.jpg"
+                            class="dropdown-avatar" alt="Profile" id="dropdownProfilePic">
                         <div class="dropdown-name" id="dropdownProfileName">Aayan Yasin</div>
                         <div class="dropdown-id" id="dropdownProfileId">IU04-0225-0926</div>
                     </div>
@@ -353,46 +979,48 @@
     </div>
 
     <div class="container">
-        
+
         <div class="profile-card">
             <!-- Student Header Banner -->
             <div class="profile-blue-header">
                 <div class="header-avatar-container">
-                    <img src="https://res.cloudinary.com/dftplaxsk/image/upload/v1776757086/1757164224340_2_ra0orp.jpg" alt="Student Pic" id="displayPic">
+                    <img src="https://res.cloudinary.com/dftplaxsk/image/upload/v1776757086/1757164224340_2_ra0orp.jpg"
+                        alt="Student Pic" id="displayPic">
                 </div>
-                
+
                 <div class="header-name" id="displayHeaderName">Aayan Yasin</div>
                 <div class="header-id" id="displayHeaderId">IU04-0225-0926</div>
-                <div class="header-faculty" id="displayHeaderFaculty">Faculty of Engineering<br>,Science and Technology</div>
-                
+                <div class="header-faculty" id="displayHeaderFaculty">Faculty of Engineering<br>,Science and Technology
+                </div>
+
                 <div class="header-meta-block">
                     <div class="meta-val" id="displayHeaderCareer">Under Graduate</div>
                     <div class="meta-lbl">Career</div>
-                    
+
                     <div class="meta-val" id="displayHeaderProgram">BACHELOR OF SCIENCE (COMPUTER SCIENCE)</div>
                     <div class="meta-lbl">Program</div>
-                    
-                    <div class="meta-val" id="displayHeaderSemester">SEMESTER-3</div>
+
+                    <div class="meta-val" id="displayHeaderSemester">SEMESTER-4</div>
                     <div class="meta-lbl">Current Semester</div>
                 </div>
-                
+
                 <!-- Red Floating Action Button (FAB) -->
                 <button class="fab-edit-btn" onclick="openEditModal()">
                     <i class="fa-solid fa-pencil"></i>
                 </button>
             </div>
-            
+
             <!-- Tab switches bar -->
             <div class="profile-tabs">
                 <div class="profile-tab active" onclick="switchTab(event, 'aboutPanel')">About</div>
                 <div class="profile-tab" onclick="switchTab(event, 'bioPanel')">Bio Data</div>
                 <div class="profile-tab" onclick="switchTab(event, 'studyPanel')">Study Track</div>
             </div>
-            
+
             <!-- ABOUT TAB -->
             <div id="aboutPanel" class="tab-panel active">
                 <h3 class="detail-section-title">Contact Information</h3>
-                
+
                 <div class="detail-row">
                     <div class="detail-icon-box"><i class="fa-solid fa-envelope"></i></div>
                     <div class="detail-text-box">
@@ -400,7 +1028,7 @@
                         <div class="detail-lbl">Email</div>
                     </div>
                 </div>
-                
+
                 <div class="detail-row">
                     <div class="detail-icon-box"><i class="fa-solid fa-phone"></i></div>
                     <div class="detail-text-box">
@@ -408,7 +1036,7 @@
                         <div class="detail-lbl">Phone</div>
                     </div>
                 </div>
-                
+
                 <div class="detail-row">
                     <div class="detail-icon-box"><i class="fa-solid fa-address-card"></i></div>
                     <div class="detail-text-box">
@@ -416,23 +1044,25 @@
                         <div class="detail-lbl">Emergency Contact</div>
                     </div>
                 </div>
-                
+
                 <div class="detail-row">
                     <div class="detail-icon-box"><i class="fa-solid fa-house"></i></div>
                     <div class="detail-text-box">
-                        <div class="detail-val" id="displayPresentAddress">Fazil Flats Nazimabad #2, Inquiry Office Karachi</div>
+                        <div class="detail-val" id="displayPresentAddress">Fazil Flats Nazimabad #2, Inquiry Office
+                            Karachi</div>
                         <div class="detail-lbl">Present Address</div>
                     </div>
                 </div>
-                
+
                 <div class="detail-row">
                     <div class="detail-icon-box"><i class="fa-solid fa-house" style="opacity: 0;"></i></div>
                     <div class="detail-text-box">
-                        <div class="detail-val" id="displayPermanentAddress">Fazil Flats Nazimabad #2, Inquiry Office Karachi</div>
+                        <div class="detail-val" id="displayPermanentAddress">Fazil Flats Nazimabad #2, Inquiry Office
+                            Karachi</div>
                         <div class="detail-lbl">Permanent Address</div>
                     </div>
                 </div>
-                
+
                 <div class="detail-row">
                     <div class="detail-icon-box"><i class="fa-solid fa-file-signature"></i></div>
                     <div class="detail-text-box">
@@ -441,11 +1071,11 @@
                     </div>
                 </div>
             </div>
-            
+
             <!-- BIO DATA TAB -->
             <div id="bioPanel" class="tab-panel">
                 <h3 class="detail-section-title">Personal Detail</h3>
-                
+
                 <div class="detail-row">
                     <div class="detail-icon-box"><i class="fa-solid fa-cake-candles"></i></div>
                     <div class="detail-text-box">
@@ -453,7 +1083,7 @@
                         <div class="detail-lbl">Date of Birth</div>
                     </div>
                 </div>
-                
+
                 <div class="detail-row">
                     <div class="detail-icon-box"><i class="fa-solid fa-venus-mars"></i></div>
                     <div class="detail-text-box">
@@ -461,7 +1091,7 @@
                         <div class="detail-lbl">Gender</div>
                     </div>
                 </div>
-                
+
                 <div class="detail-row">
                     <div class="detail-icon-box"><i class="fa-solid fa-id-card"></i></div>
                     <div class="detail-text-box">
@@ -469,7 +1099,7 @@
                         <div class="detail-lbl">CNIC</div>
                     </div>
                 </div>
-                
+
                 <div class="detail-row">
                     <div class="detail-icon-box"><i class="fa-solid fa-map-location-dot"></i></div>
                     <div class="detail-text-box">
@@ -477,7 +1107,7 @@
                         <div class="detail-lbl">Domicile</div>
                     </div>
                 </div>
-                
+
                 <div class="detail-row">
                     <div class="detail-icon-box"><i class="fa-solid fa-flag"></i></div>
                     <div class="detail-text-box">
@@ -485,7 +1115,7 @@
                         <div class="detail-lbl">Nationality</div>
                     </div>
                 </div>
-                
+
                 <div class="detail-row">
                     <div class="detail-icon-box"><i class="fa-solid fa-mosque"></i></div>
                     <div class="detail-text-box">
@@ -493,7 +1123,7 @@
                         <div class="detail-lbl">Religion</div>
                     </div>
                 </div>
-                
+
                 <div class="detail-row">
                     <div class="detail-icon-box"><i class="fa-solid fa-droplet" style="color: #c62828;"></i></div>
                     <div class="detail-text-box">
@@ -501,37 +1131,37 @@
                         <div class="detail-lbl">Blood Group</div>
                     </div>
                 </div>
-                
+
                 <h3 class="detail-section-title">Family Detail</h3>
-                
+
                 <div class="detail-row" style="padding-left: 47px;">
                     <div class="detail-text-box">
                         <div class="detail-val" id="displayFatherName">Yasin Ali</div>
                         <div class="detail-lbl">Father Name</div>
                     </div>
                 </div>
-                
+
                 <div class="detail-row" style="padding-left: 47px;">
                     <div class="detail-text-box">
                         <div class="detail-val" id="displayFatherCnic">4210114158003</div>
                         <div class="detail-lbl">Father CNIC</div>
                     </div>
                 </div>
-                
+
                 <div class="detail-row" style="padding-left: 47px;">
                     <div class="detail-text-box">
                         <div class="detail-val" id="displayGuardianName">-</div>
                         <div class="detail-lbl">Guardian Name</div>
                     </div>
                 </div>
-                
+
                 <div class="detail-row" style="padding-left: 47px;">
                     <div class="detail-text-box">
                         <div class="detail-val" id="displayGuardianCnic">-</div>
                         <div class="detail-lbl">Guardian CNIC</div>
                     </div>
                 </div>
-                
+
                 <div class="detail-row" style="padding-left: 47px;">
                     <div class="detail-text-box">
                         <div class="detail-val" id="displayMaritalStatus">-</div>
@@ -539,55 +1169,59 @@
                     </div>
                 </div>
             </div>
-            
+
             <!-- STUDY TRACK TAB -->
             <div id="studyPanel" class="tab-panel study-track-panel">
                 <div class="detail-row">
                     <div class="detail-val" id="displayProgramOption">Thesis</div>
                     <div class="detail-lbl">Program Option</div>
                 </div>
-                
+
                 <div style="height: 1px; background-color: #f3f4f6; width: 100%;"></div>
-                
+
                 <div class="detail-row" style="margin-top: 10px;">
                     <div class="detail-val" id="displaySpecialization">None</div>
                     <div class="detail-lbl">Specialization</div>
                 </div>
             </div>
         </div>
-        
+
         <!-- Notifications Title -->
         <h2 class="notifications-header">Notifications</h2>
-        
+
         <!-- Graduating Survey card -->
         <div class="survey-card">
             <div class="survey-card-actions"><i class="fa-solid fa-ellipsis-vertical"></i></div>
             <div class="survey-title">Graduating Survey, Spring 2026</div>
             <div class="survey-banner-txt">To be filled out by graduating students before the award of degree.</div>
             <div class="survey-desc">
-                The survey seeks graduating students' input on the quality of education they received in their program and the level of preparation they had at university. The purpose of this survey is to assess the quality of academic programs.
+                The survey seeks graduating students' input on the quality of education they received in their program
+                and the level of preparation they had at university. The purpose of this survey is to assess the quality
+                of academic programs.
             </div>
         </div>
-        
+
         <div style="height: 1px; background-color: #e5e7eb; margin: 25px 0 15px 0; width: 100%;"></div>
         <div style="text-align: center; padding: 10px 0;">
-            <a href="404.html?page=Online-Classes" class="banner-link" style="color: #637381; font-weight: normal; font-size: 13px; text-decoration: none;">HOW TO ATTEND ONLINE CLASSES</a>
+            <a href="404.html?page=Online-Classes" class="banner-link"
+                style="color: #637381; font-weight: normal; font-size: 13px; text-decoration: none;">HOW TO ATTEND
+                ONLINE CLASSES</a>
         </div>
-        
+
     </div>
 
     <!-- Edit Modal Dialog -->
     <div class="modal" id="editProfileModal">
         <div class="modal-content">
             <h2>Edit Profile Details</h2>
-            
+
             <!-- Modal Internal Switcher -->
             <div class="modal-tab-headers">
                 <div class="modal-tab-btn active" onclick="switchModalTab(event, 'modalAboutPanel')">About</div>
                 <div class="modal-tab-btn" onclick="switchModalTab(event, 'modalBioPanel')">Bio Data</div>
                 <div class="modal-tab-btn" onclick="switchModalTab(event, 'modalStudyPanel')">Study</div>
             </div>
-            
+
             <form id="editProfileForm" onsubmit="saveProfileEdits(event)">
                 <!-- Modal Panel 2: About / Contacts -->
                 <div id="modalAboutPanel" class="modal-tab-panel active">
@@ -617,7 +1251,7 @@
                         <input type="text" id="inputSignature" required>
                     </div>
                 </div>
-                
+
                 <!-- Modal Panel 3: Bio Data -->
                 <div id="modalBioPanel" class="modal-tab-panel">
                     <div class="form-section-header">Personal Details</div>
@@ -653,7 +1287,7 @@
                         <label>Blood Group</label>
                         <input type="text" id="inputBloodGroup" placeholder="e.g. O+" required>
                     </div>
-                    
+
                     <div class="form-section-header">Family Details</div>
                     <div class="form-group">
                         <label>Father Name</label>
@@ -676,7 +1310,7 @@
                         <input type="text" id="inputMaritalStatus" placeholder="-">
                     </div>
                 </div>
-                
+
                 <!-- Modal Panel 4: Study Track -->
                 <div id="modalStudyPanel" class="modal-tab-panel">
                     <div class="form-section-header">Study Track details</div>
@@ -689,7 +1323,7 @@
                         <input type="text" id="inputSpecialization" placeholder="e.g. None" required>
                     </div>
                 </div>
-                
+
                 <div class="modal-buttons">
                     <button type="button" class="btn btn-cancel" onclick="closeEditModal()">Cancel</button>
                     <button type="submit" class="btn btn-save">Save Changes</button>
@@ -728,7 +1362,7 @@
             program: "BACHELOR OF SCIENCE (COMPUTER SCIENCE)",
             semester: "SEMESTER-3",
             picUrl: "https://res.cloudinary.com/dftplaxsk/image/upload/v1776757086/1757164224340_2_ra0orp.jpg",
-            
+
             // ABOUT Tab
             email: "aayan06pk@gmail.com",
             phone: "03361915333",
@@ -736,7 +1370,7 @@
             presentAddress: "Fazil Flats Nazimabad #2, Inquiry Office Karachi",
             permanentAddress: "Fazil Flats Nazimabad #2, Inquiry Office Karachi",
             signature: "Official Signature",
-            
+
             // BIO DATA Tab
             dob: "2006-02-25",
             gender: "Male",
@@ -750,7 +1384,7 @@
             guardianName: "-",
             guardianCnic: "-",
             maritalStatus: "-",
-            
+
             // STUDY TRACK Tab
             programOption: "Thesis",
             specialization: "None"
@@ -818,14 +1452,14 @@
         }
 
         // Setup dynamic Edit Modal prefill values
-        window.openEditModal = function() {
+        window.openEditModal = function () {
             document.getElementById('inputEmail').value = profileState.email;
             document.getElementById('inputPhone').value = profileState.phone;
             document.getElementById('inputEmergency').value = profileState.emergency;
             document.getElementById('inputPresentAddress').value = profileState.presentAddress;
             document.getElementById('inputPermanentAddress').value = profileState.permanentAddress;
             document.getElementById('inputSignature').value = profileState.signature;
-            
+
             document.getElementById('inputDob').value = profileState.dob;
             document.getElementById('inputGender').value = profileState.gender;
             document.getElementById('inputCnic').value = profileState.cnic;
@@ -838,7 +1472,7 @@
             document.getElementById('inputGuardianName').value = profileState.guardianName;
             document.getElementById('inputGuardianCnic').value = profileState.guardianCnic;
             document.getElementById('inputMaritalStatus').value = profileState.maritalStatus;
-            
+
             document.getElementById('inputProgramOption').value = profileState.programOption;
             document.getElementById('inputSpecialization').value = profileState.specialization;
 
@@ -853,14 +1487,14 @@
             document.getElementById('editProfileModal').style.display = 'flex';
         }
 
-        window.closeEditModal = function() {
+        window.closeEditModal = function () {
             document.getElementById('editProfileModal').style.display = 'none';
         }
 
         // Form Submit listener to save edits
-        window.saveProfileEdits = async function(event) {
+        window.saveProfileEdits = async function (event) {
             event.preventDefault();
-            
+
             const updatedData = {
                 // Read official headers from profileState to preserve them
                 name: profileState.name,
@@ -870,14 +1504,14 @@
                 program: profileState.program,
                 semester: profileState.semester,
                 picUrl: profileState.picUrl,
-                
+
                 email: document.getElementById('inputEmail').value,
                 phone: document.getElementById('inputPhone').value,
                 emergency: document.getElementById('inputEmergency').value,
                 presentAddress: document.getElementById('inputPresentAddress').value,
                 permanentAddress: document.getElementById('inputPermanentAddress').value,
                 signature: document.getElementById('inputSignature').value,
-                
+
                 dob: document.getElementById('inputDob').value,
                 gender: document.getElementById('inputGender').value,
                 cnic: document.getElementById('inputCnic').value,
@@ -890,7 +1524,7 @@
                 guardianName: document.getElementById('inputGuardianName').value || "-",
                 guardianCnic: document.getElementById('inputGuardianCnic').value || "-",
                 maritalStatus: document.getElementById('inputMaritalStatus').value || "-",
-                
+
                 programOption: document.getElementById('inputProgramOption').value,
                 specialization: document.getElementById('inputSpecialization').value
             };
@@ -908,7 +1542,7 @@
             }
         }
 
-        window.handleLogout = async function() {
+        window.handleLogout = async function () {
             try {
                 await signOut(auth);
                 window.location.href = "login.html";
@@ -980,36 +1614,61 @@
         profilePic.addEventListener('touchend', endPress);
         profilePic.addEventListener('touchcancel', cancelPress);
 
-        window.addEventListener('click', function(e) {
+        window.addEventListener('click', function (e) {
             if (!profilePic.contains(e.target) && !profileDropdown.contains(e.target)) {
                 profileDropdown.classList.remove('show');
             }
         });
 
+        // Grid Menu Dropdown Controls
+        const gridBtn = document.getElementById('gridBtn');
+        const gridDropdown = document.getElementById('gridDropdown');
+
+        if (gridBtn && gridDropdown) {
+            gridBtn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                gridDropdown.classList.toggle('show');
+                if (profileDropdown && profileDropdown.classList.contains('show')) {
+                    profileDropdown.classList.remove('show');
+                }
+            });
+
+            gridDropdown.addEventListener('click', function (e) {
+                e.stopPropagation();
+            });
+
+            window.addEventListener('click', function (e) {
+                if (!gridBtn.contains(e.target) && !gridDropdown.contains(e.target)) {
+                    gridDropdown.classList.remove('show');
+                }
+            });
+        }
+
         // Tab switches bar logic
-        window.switchTab = function(event, panelId) {
+        window.switchTab = function (event, panelId) {
             const tabs = document.querySelectorAll('.profile-tab');
             const panels = document.querySelectorAll('.tab-panel');
-            
+
             tabs.forEach(t => t.classList.remove('active'));
             panels.forEach(p => p.classList.remove('active'));
-            
+
             event.currentTarget.classList.add('active');
             document.getElementById(panelId).classList.add('active');
         }
 
         // Tab switcher inside Modal logic
-        window.switchModalTab = function(event, modalPanelId) {
+        window.switchModalTab = function (event, modalPanelId) {
             const tabs = document.querySelectorAll('.modal-tab-btn');
             const panels = document.querySelectorAll('.modal-tab-panel');
-            
+
             tabs.forEach(t => t.classList.remove('active'));
             panels.forEach(p => p.classList.remove('active'));
-            
+
             event.currentTarget.classList.add('active');
             document.getElementById(modalPanelId).classList.add('active');
         }
 
     </script>
 </body>
+
 </html>

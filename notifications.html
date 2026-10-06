@@ -14,6 +14,47 @@
         .top-navbar { background-color: #0b3d68; color: white; display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; height: 55px; position: sticky; top: 0; z-index: 100;}
         .nav-left { display: flex; align-items: center; gap: 15px; font-size: 20px; }
         .nav-left i { cursor: pointer; }
+
+        /* --- GRID MENU POPUP --- */
+        .grid-container { position: relative; display: flex; align-items: center; }
+        #gridBtn { cursor: pointer; font-size: 20px; color: white; padding: 2px 4px; display: inline-block; }
+        .grid-dropdown {
+            position: absolute;
+            top: 38px;
+            left: -12px;
+            width: 165px;
+            background: #ffffff;
+            box-shadow: 2px 4px 14px rgba(0, 0, 0, 0.18);
+            border: 1px solid #dcdcdc;
+            border-top: none;
+            padding: 22px 10px;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            z-index: 1000;
+        }
+        .grid-dropdown.show { display: flex; }
+        .grid-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            gap: 6px;
+            cursor: pointer;
+            width: 100%;
+        }
+        .grid-item:hover { opacity: 0.85; }
+        .grid-item i { font-size: 26px; color: #0b3d68; line-height: 1; }
+        .grid-item .attendance-icon { display: block; }
+        .grid-item span {
+            font-size: 13.5px;
+            color: #0b3d68;
+            text-decoration: underline;
+            font-weight: 500;
+            white-space: nowrap;
+        }
         .nav-right { display: flex; align-items: center; gap: 15px; }
         .notification { position: relative; font-size: 20px; cursor: pointer; }
         
@@ -179,7 +220,31 @@
     <div class="top-navbar">
         <div class="nav-left">
             <i class="fa-solid fa-bars" id="menuBtn"></i>
-            <i class="fa-solid fa-grip"></i>
+            <div class="grid-container">
+                <i class="fa-solid fa-grip" id="gridBtn"></i>
+                <div class="grid-dropdown" id="gridDropdown">
+                    <a href="notifications.html" class="grid-item">
+                        <i class="fa-solid fa-bell"></i>
+                        <span>Notifications</span>
+                    </a>
+                    <a href="datesheet.html" class="grid-item">
+                        <i class="fa-regular fa-calendar"></i>
+                        <span>DateSheet</span>
+                    </a>
+                    <a href="results.html" class="grid-item">
+                        <i class="fa-solid fa-book-open"></i>
+                        <span>Enrolled Courses</span>
+                    </a>
+                    <a href="attendance.html" class="grid-item">
+                        <svg class="attendance-icon" width="28" height="28" viewBox="0 0 30 30" fill="none">
+                            <path d="M5 22L13.5 4.5L22 22" stroke="#0b3d68" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" />
+                            <path d="M8.5 15.5H18.5" stroke="#0b3d68" stroke-width="2.6" stroke-linecap="round" />
+                            <path d="M13.5 20L17.5 24.5L25.5 14.5" stroke="#0b3d68" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                        <span>Attendance</span>
+                    </a>
+                </div>
+            </div>
         </div>
         <div class="nav-right">
             <div class="notification" onclick="window.location.href='notifications.html'">
@@ -341,6 +406,30 @@
                 profileDropdown.classList.remove('show');
             }
         });
+
+        // Grid Menu Dropdown Controls
+        const gridBtn = document.getElementById('gridBtn');
+        const gridDropdown = document.getElementById('gridDropdown');
+
+        if (gridBtn && gridDropdown) {
+            gridBtn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                gridDropdown.classList.toggle('show');
+                if (profileDropdown && profileDropdown.classList.contains('show')) {
+                    profileDropdown.classList.remove('show');
+                }
+            });
+
+            gridDropdown.addEventListener('click', function (e) {
+                e.stopPropagation();
+            });
+
+            window.addEventListener('click', function (e) {
+                if (!gridBtn.contains(e.target) && !gridDropdown.contains(e.target)) {
+                    gridDropdown.classList.remove('show');
+                }
+            });
+        }
 
     </script>
 </body>
