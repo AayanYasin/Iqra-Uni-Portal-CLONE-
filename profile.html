@@ -855,6 +855,128 @@
         .dropdown-item.logout:hover i {
             color: #c0392b;
         }
+
+        /* --- DESKTOP RESPONSIVE ADAPTATIONS --- */
+        @media (min-width: 768px) {
+            .top-navbar {
+                padding: 10px 30px;
+            }
+            .breadcrumb {
+                padding: 14px 30px;
+                font-size: 14.5px;
+            }
+            .container {
+                max-width: 1000px;
+                padding: 30px 25px;
+            }
+            .profile-card {
+                border-radius: 10px;
+                box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08);
+            }
+            .profile-blue-header {
+                padding: 45px 40px 50px 40px;
+            }
+            .header-avatar-container {
+                width: 115px;
+                height: 115px;
+                border-width: 4px;
+            }
+            .header-name {
+                font-size: 22px;
+            }
+            .header-id {
+                font-size: 14px;
+            }
+            .header-faculty {
+                font-size: 14px;
+                max-width: 650px;
+            }
+            .header-meta-block {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 20px;
+                width: 100%;
+                max-width: 780px;
+                margin-top: 25px;
+                background: rgba(255, 255, 255, 0.09);
+                border-radius: 8px;
+                padding: 18px 24px;
+                text-align: center;
+            }
+            .meta-val {
+                font-size: 16px;
+                margin-bottom: 4px;
+            }
+            .meta-lbl {
+                margin-bottom: 0;
+                font-size: 12px;
+            }
+            .fab-edit-btn {
+                right: 35px;
+                bottom: -24px;
+                width: 48px;
+                height: 48px;
+                font-size: 18px;
+            }
+            .profile-tabs {
+                padding: 0 30px;
+                background: #fafbfd;
+            }
+            .profile-tab {
+                font-size: 13px;
+                padding: 16px 24px;
+                flex: none;
+            }
+            .tab-panel {
+                padding: 35px 40px;
+            }
+            #aboutPanel.active, #bioPanel.active {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 12px 35px;
+                align-items: start;
+            }
+            .detail-section-title {
+                grid-column: 1 / -1;
+                font-size: 16px;
+                border-bottom: 1px solid #edf2f7;
+                padding-bottom: 8px;
+                margin-top: 20px;
+                margin-bottom: 10px;
+            }
+            .detail-section-title:first-child {
+                margin-top: 0;
+            }
+            #studyPanel.active {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 15px 35px;
+            }
+            .modal-content {
+                max-width: 680px;
+                padding: 28px 32px;
+                border-radius: 12px;
+            }
+            .modal-content h2 {
+                font-size: 20px;
+                margin-bottom: 20px;
+            }
+            .modal-tab-panel.active {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 14px 20px;
+            }
+            .form-section-header {
+                grid-column: 1 / -1;
+                margin-top: 15px;
+                font-size: 15px;
+                border-bottom: 1px solid #e5e7eb;
+                padding-bottom: 6px;
+            }
+            .form-section-header:first-child {
+                margin-top: 0;
+            }
+        }
     </style>
 </head>
 
